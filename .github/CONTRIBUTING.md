@@ -76,8 +76,8 @@ Use the [Feature Request template](ISSUE_TEMPLATE/feature_request.md).
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/hyperwolf
-cd hyperwolf
+git clone https://github.com/ArcaneSphere/HyperWolf
+cd HyperWolf
 
 # Build
 CGO_ENABLED=0 go build -o hyperwolf .

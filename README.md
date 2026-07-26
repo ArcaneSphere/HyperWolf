@@ -77,8 +77,8 @@ HyperWolf is a **standalone desktop application** for browsing, searching, and l
 
 ```bash
 # 1. Clone and build
-git clone https://github.com/your-org/hyperwolf
-cd hyperwolf
+git clone https://github.com/ArcaneSphere/HyperWolf
+cd HyperWolf
 CGO_ENABLED=0 go build -o hyperwolf .
 
 # 2. Launch
@@ -362,5 +362,5 @@ HyperWolf stands on the shoulders of these excellent projects:
 ---
 
 <p align="center">
-  <sub>Built for the <a href="https://dero.io">DERO</a> ecosystem · Made with ❤️ by <a href="https://github.com/your-org">PureWolf Contributors</a></sub>
+  <sub>Built for the <a href="https://dero.io">DERO</a> ecosystem · Made with ❤️ by <a href="https://github.com/ArcaneSphere">ArcaneSphere</a></sub>
 </p>
