@@ -1,0 +1,38 @@
+# --- Built binaries ---
+hyperwolf
+hyperwolf.exe
+hyperwolf-linux
+hyperwolf-darwin
+hyperwolf-darwin-arm64
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# --- IDE ---
+.idea/
+.vscode/
+*.sublime-*
+*.code-workspace
+
+# --- Go ---
+vendor/
+*.test
+*.test.exe
+*.out
+go.work
+go.work.sum
+dist/
+
+# --- Runtime data (created on first run) ---
+gnomondb/
+*.log
+
+# --- Dependencies ---
+node_modules/
+package.json
+package-lock.json
+bun.lock

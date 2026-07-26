@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HyperWolf</title>
+<style>
+:root {
+  --bg: #000000;
+  --surface: #0F0F0F;
+  --text: #f0f0f0;
+  --text-secondary: #888888;
+  --accent: #00d4ff;
+  --accent-soft: rgba(0, 212, 255, 0.08);
+  --success: #00ff88;
+  --danger: #ff4444;
+  --border: #1a1a1a;
+  --radius: 8px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  width: 380px;
+  overflow-x: hidden;
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.header img { width: 24px; height: 24px; }
+.header h1 { font-size: 15px; font-weight: 600; }
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab:hover { color: var(--text); }
+.content { padding: 12px 16px 16px; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+.status-label { color: var(--text-secondary); }
+.status-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  box-shadow: 0 0 4px var(--text-secondary);
+}
+.dot.green { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.dot.red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.btn {
+  flex: 1;
+  padding: 8px 12px;
+  text-align: center;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  transition: all 0.2s;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.danger { border-color: var(--danger); color: var(--danger); }
+.btn.danger:hover { background: var(--danger); color: #fff; }
+.btn.primary { border-color: var(--accent); color: var(--accent); }
+.btn.primary:hover { background: var(--accent); color: #000; }
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin: 12px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.data-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 12px;
+}
+.data-label { color: var(--text-secondary); }
+.data-value { color: var(--text); max-width: 200px; text-align: right; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+    <circle cx="24" cy="24" r="22" stroke="#00d4ff" stroke-width="3" fill="none"/>
+    <path d="M16 28 L24 16 L32 28" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M18 32 L30 32" stroke="#00d4ff" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>
+  <h1>HyperWolf</h1>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="status">Status</div>
+  <div class="tab" data-tab="live">Live Data</div>
+</div>
+
+<div class="content">
+  <div class="tab-pane active" id="tab-status">
+    <div id="status-rows"></div>
+    <div class="actions">
+      <div class="btn danger" id="btn-toggle-node">Stop Node</div>
+      <div class="btn primary" id="btn-dashboard" onclick="openDashboard()">Open Dashboard</div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="tab-live">
+    <div class="section-title">💻 Network</div>
+    <div class="data-row"><span class="data-label">Node</span><span class="data-value" id="lv-node">—</span></div>
+    <div class="data-row"><span class="data-label">Version</span><span class="data-value" id="lv-version">—</span></div>
+    <div class="data-row"><span class="data-label">Network</span><span class="data-value" id="lv-network">—</span></div>
+    <div class="data-row"><span class="data-label">Tip Age</span><span class="data-value" id="lv-tipage">—</span></div>
+    <div class="data-row"><span class="data-label">Uptime</span><span class="data-value" id="lv-uptime">—</span></div>
+    <div class="data-row"><span class="data-label">Difficulty</span><span class="data-value" id="lv-difficulty">—</span></div>
+    <div class="data-row"><span class="data-label">Mempool</span><span class="data-value" id="lv-mempool">—</span></div>
+
+    <div class="section-title">📦 TELA Apps</div>
+    <div class="data-row"><span class="data-label">Discovered</span><span class="data-value" id="lv-tela-count">—</span></div>
+    <div class="data-row"><span class="data-label">Status</span><span class="data-value" id="lv-tela-status">—</span></div>
+
+    <div class="section-title">⚡ Sync</div>
+    <div class="data-row"><span class="data-label">Indexed</span><span class="data-value" id="lv-indexed">—</span></div>
+    <div class="data-row"><span class="data-label">Chain</span><span class="data-value" id="lv-chain">—</span></div>
+    <div class="data-row"><span class="data-label">Progress</span><span class="data-value" id="lv-sync">—</span></div>
+  </div>
+</div>
+
+<script>
+const rows = [
+  { id: 'node-text', key: 'node', okText: 'Connected', failText: 'Not connected', check: r => !!r.result.node },
+  { id: 'tela-text', key: 'tela', okText: 'Running', failText: 'Stopped', check: r => r.result.tela },
+  { id: 'gnomon-text', key: 'gnomon', okText: 'Running', failText: 'Stopped', check: r => r.result.gnomon },
+  { id: 'ws-text', key: 'xswd', okText: 'Allowed', failText: 'Blocked', check: r => null },
+];
+
+const statusEl = document.getElementById('status-rows');
+function buildStatusHTML() {
+  statusEl.innerHTML = rows.map(r => `
+    <div class="status-row">
+      <span class="status-label">${r.key === 'node' ? 'Node' : r.key === 'tela' ? 'TELA' : r.key === 'gnomon' ? 'Gnomon' : 'Web Socket'}</span>
+      <span class="status-value">
+        <span class="dot red" id="${r.id}-dot"></span>
+        <span id="${r.id}">${r.failText}</span>
+      </span>
+    </div>
+  `).join('');
+}
+buildStatusHTML();
+
+let nodeConnected = false;
+let lastBlockTime = null;
+let connectTime = null;
+
+function formatAge(ms) {
+  const s = Math.floor(ms / 1000);
+  if (s < 5) return 'just now';
+  if (s < 60) return s + 's ago';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + 'm ago';
+  return Math.floor(m / 60) + 'h ago';
+}
+
+function formatDuration(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return h + 'h ' + m + 'm';
+  if (m > 0) return m + 'm ' + sec + 's';
+  return sec + 's';
+}
+
+function formatDiff(diff) {
+  if (diff >= 1e12) return (diff / 1e12).toFixed(2) + ' TH/s';
+  if (diff >= 1e9) return (diff / 1e9).toFixed(2) + ' GH/s';
+  if (diff >= 1e6) return (diff / 1e6).toFixed(2) + ' MH/s';
+  if (diff >= 1e3) return (diff / 1e3).toFixed(2) + ' KH/s';
+  return diff.toFixed(0) + ' H/s';
+}
+
+function setDot(id, green) {
+  const dot = document.getElementById(id);
+  if (dot) { dot.className = 'dot ' + (green ? 'green' : 'red'); }
+}
+
+async function poll() {
+  try {
+    const r = await (await fetch('/api/server_status', { method: 'POST' })).json();
+    if (!r.ok || !r.result) return;
+
+    const { tela, gnomon, connected, node, heights, tela_apps_count, connected_at, daemon } = r.result;
+    const hasNode = !!node;
+
+    // Status indicators
+    const s = r;
+    const vals = {
+      node: hasNode,
+      tela,
+      gnomon: gnomon,
+    };
+    for (const row of rows) {
+      const val = row.check ? row.check(r) : vals[row.key];
+      const ok = val === true || val === null ? hasNode : val;
+      setDot(row.id + '-dot', ok);
+      document.getElementById(row.id).textContent = ok ? row.okText : row.failText;
+    }
+
+    // xswd probe
+    try {
+      const xr = await (await fetch('/api/probe_xswd')).json();
+      const xswdOk = xr.xswd === true;
+      setDot('ws-text-dot', xswdOk);
+      document.getElementById('ws-text').textContent = xswdOk ? 'Allowed' : 'Blocked';
+    } catch(e) {}
+
+    nodeConnected = hasNode;
+
+    // Toggle button
+    const btn = document.getElementById('btn-toggle-node');
+    if (hasNode) {
+      btn.textContent = 'Stop Node';
+      btn.className = 'btn danger';
+    } else {
+      btn.textContent = 'Start Node';
+      btn.className = 'btn primary';
+    }
+
+    // Live data
+    document.getElementById('lv-node').textContent = node || '—';
+    document.getElementById('lv-version').textContent = daemon?.version || '—';
+    document.getElementById('lv-network').textContent = daemon?.network || '—';
+    if (daemon?.difficulty > 0) {
+      document.getElementById('lv-difficulty').textContent = formatDiff(Number(daemon.difficulty));
+    }
+    if (daemon?.mempool_size != null) {
+      document.getElementById('lv-mempool').textContent = daemon.mempool_size + ' txs';
+    }
+    document.getElementById('lv-tela-count').textContent = tela_apps_count > 0 ? tela_apps_count.toLocaleString() : '—';
+
+    // Tip age & uptime
+    if (heights) {
+      document.getElementById('lv-indexed').textContent = heights.indexed > 0 ? heights.indexed.toLocaleString() : '—';
+      document.getElementById('lv-chain').textContent = heights.chain > 0 ? heights.chain.toLocaleString() : '—';
+      if (heights.indexed > 0 && heights.chain > 0) {
+        if (heights.indexed >= heights.chain - 3) {
+          document.getElementById('lv-sync').textContent = 'Chain synced';
+        } else {
+          const pct = Math.min(100, (heights.indexed / heights.chain) * 100).toFixed(1);
+          document.getElementById('lv-sync').textContent = pct + '% synced';
+        }
+      } else {
+        document.getElementById('lv-sync').textContent = '—';
+      }
+    }
+
+    // Tip age from chain height changes (approximate via connected_at)
+    if (connected_at > 0) {
+      const secs = Math.floor((Date.now() - connected_at) / 1000);
+      document.getElementById('lv-uptime').textContent = formatDuration(secs);
+    }
+
+    // TELA status text
+    const telaStatusEl = document.getElementById('lv-tela-status');
+    if (tela_apps_count > 0) {
+      const cat = document.querySelector('[data-page=search]');
+      telaStatusEl.textContent = 'All discovered';
+    } else {
+      telaStatusEl.textContent = 'Not discovered';
+    }
+
+  } catch(e) { console.warn('Poll error:', e); }
+}
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// Toggle node
+document.getElementById('btn-toggle-node').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-toggle-node');
+  if (nodeConnected) {
+    btn.textContent = 'Stopping...';
+    await fetch('/api/disconnect_node', { method: 'POST' });
+  } else {
+    btn.textContent = 'Connecting...';
+    const node = document.getElementById('lv-node').textContent;
+    const target = node && node !== '—' ? node : '127.0.0.1:10102';
+    await fetch('/api/set_node', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({node: target}) });
+  }
+  setTimeout(poll, 1500);
+});
+
+function openDashboard() {
+  window.open('/', '_blank');
+}
+
+poll();
+setInterval(poll, 3000);
+</script>
+</body>
+</html>

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>HyperWolf</title>
+  <link rel="icon" type="image/png" sizes="48x48" href="icons/hyperwolf-48x48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="icons/hyperwolf-96x96.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="scid-loader"><div class="bar"></div></div>
+
+  <div id="bookmark-popover" class="popover hidden">
+    <div class="popover-content">
+      <div class="popover-title" id="bookmark-popover-title">Bookmark</div>
+      <input id="bookmark-label-input" type="text" placeholder="Bookmark label" maxlength="48">
+      <div class="popover-actions">
+        <button id="bookmark-popover-save">Save</button>
+        <button id="bookmark-popover-cancel" class="secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirm-popover" class="popover hidden">
+    <div class="popover-content" style="max-width: 360px;">
+      <div class="popover-title" id="confirm-popover-title">Confirm</div>
+      <p id="confirm-popover-message" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;"></p>
+      <div class="popover-actions">
+        <button id="confirm-popover-yes" class="danger">Confirm</button>
+        <button id="confirm-popover-no" class="secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <button id="toggle-sidebar" title="Collapse sidebar">☰</button>
+      <img id="sidebar-logo" src="icons/hyperwolf-96x96.png" alt="HyperWolf logo" />
+      <span class="sidebar-title"></span>
+    </div>
+
+    <div id="sidebar-nav">
+      <div class="nav-item active" data-page="server">
+        <span class="nav-icon">🖥️</span>
+        <span class="nav-text">Node Status</span>
+      </div>
+      <div class="nav-item" data-page="search">
+        <span class="nav-icon">🔍</span>
+        <span class="nav-text">Search</span>
+      </div>
+      <div class="nav-item" data-page="bookmarks">
+        <span class="nav-icon">⭐</span>
+        <span class="nav-text">Bookmarks</span>
+        <span class="nav-badge" id="bookmark-badge"></span>
+      </div>
+      <div class="nav-item" data-page="settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-text">Settings</span>
+      </div>
+      <div class="nav-item" data-page="help">
+        <span class="nav-icon">❓</span>
+        <span class="nav-text">Help</span>
+      </div>
+      <div class="nav-item" data-page="about">
+        <span class="nav-icon">ℹ️</span>
+        <span class="nav-text">About</span>
+      </div>
+    </div>
+    <div id="sidebar-status">
+      <div class="sb-status-row">
+        <span class="sb-label">Node</span>
+        <span id="sidebar-server-status">
+          <span class="sb-icon">🔴</span>
+          <span class="sb-text">Not connected</span>
+        </span>
+      </div>
+      <div class="sb-status-row">
+        <span class="sb-label">TELA</span>
+        <span id="sidebar-tela-status">
+          <span class="sb-icon">🔴</span>
+          <span class="sb-text">Stopped</span>
+        </span>
+      </div>
+      <div class="sb-status-row">
+        <span class="sb-label">Gnomon</span>
+        <span id="sidebar-gnomon-status">
+          <span class="sb-icon">🔴</span>
+          <span class="sb-text">Stopped</span>
+        </span>
+      </div>
+      <div class="sb-status-row">
+        <span class="sb-label">Web Socket</span>
+        <span id="sidebar-xswd-status">
+          <span class="sb-icon">🔴</span>
+          <span class="sb-text">Not connected</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="header">
+      <div class="input-row top-input">
+        <div class="input-wrapper">
+          <input id="node" placeholder="Node address (e.g. 127.0.0.1:10102)">
+          <button id="bookmark-node" class="icon" title="Bookmark this node">☆</button>
+        </div>
+        <button id="connectNodeBtn">Connect</button>
+      </div>
+
+      <div class="input-row top-input">
+        <div class="input-wrapper">
+          <input id="scid" placeholder="SCID (64 hex characters)">
+          <button id="bookmark-scid" class="icon" title="Bookmark this SCID">☆</button>
+        </div>
+        <button id="load" class="load-btn">🚀 Load SCID</button>
+      </div>
+
+      <div id="status" class="status-box"></div>
+
+      <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
+        <div class="theme-toggle-slider">
+          <svg class="theme-icon sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </div>
+      </button>
+    </div>
+
+     <div id="content">
+        <div id="page-server" class="page active">
+          <h2>Node Status</h2>
+
+          <div class="status-grid">
+            <div class="status-card">
+              <div class="card-header">💻 Network</div>
+              <div class="card-body">
+                <div class="card-row">
+                  <span class="card-label">Node</span>
+                  <span class="card-value" id="sv-node">—</span>
+                </div>
+                <div class="card-row">
+                  <span class="card-label">Version</span>
+                  <span class="card-value" id="sv-version">—</span>
+                </div>
+                <div class="card-row">
+                  <span class="card-label">Network</span>
+                  <span class="card-value" id="sv-network">—</span>
+                </div>
+                <div class="card-row">
+                  <span class="card-label">Tip Age</span>
+                  <span class="card-value" id="sv-tip-age">—</span>
+                </div>
+                <details class="card-expand">
+                  <summary>Daemon Info ▾</summary>
+                  <div class="card-row">
+                    <span class="card-label">Uptime</span>
+                    <span class="card-value" id="sv-uptime">—</span>
+                  </div>
+                  <div class="card-row">
+                    <span class="card-label">Difficulty</span>
+                    <span class="card-value" id="sv-difficulty">—</span>
+                  </div>
+                  <div class="card-row">
+                    <span class="card-label">Mempool</span>
+                    <span class="card-value" id="sv-mempool">—</span>
+                  </div>
+                </details>
+              </div>
+            </div>
+
+            <div class="status-card card-apps">
+              <div class="card-header">📦 TELA Apps</div>
+              <div class="card-body">
+                <div class="card-row" style="justify-content:center; gap:8px;">
+                  <span class="card-value-lg" id="sv-tela-count">—</span>
+                  <span class="card-value" style="font-size:14px; color:var(--text-secondary);">discovered</span>
+                </div>
+                <div class="card-row" style="justify-content:center;">
+                  <span class="card-value" id="sv-tela-status" style="font-size:12px;">—</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="status-card">
+              <div class="card-header">⚡ Sync</div>
+              <div class="card-body">
+                <div class="card-row">
+                  <span class="card-label">Indexed</span>
+                  <span class="card-value" id="db-height">—</span>
+                </div>
+                <div class="card-row">
+                  <span class="card-label">Chain</span>
+                  <span class="card-value" id="daemon-height">—</span>
+                </div>
+                <div id="sync-info" style="margin-top: 10px;">
+                  <div id="sync-label" class="sync-label">Waiting...</div>
+                  <div class="progress-bar"><div id="sync-bar" class="progress-fill" style="width:0%"></div></div>
+                  <div id="sync-eta" class="sync-label" style="margin-top: 4px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p>Servers are started automatically once a node is connected.</p>
+        </div>
+
+      <div id="page-search" class="page">
+          <h2>Search</h2>
+          <div class="search-sticky">
+            <div class="input-row">
+              <div class="input-wrapper">
+                <input id="searchBox" type="text" placeholder="Search for SCIDs, nodes, or content..." disabled>
+                <div id="searchSuggestions" class="search-dropdown hidden"></div>
+              </div>
+            </div>
+            <div class="controls-row">
+              <div class="control-group">
+                <label for="minRating">Min rating:</label>
+                <span id="minRatingVal">30</span>
+                <input type="range" id="minRating" min="0" max="99" step="1" value="30">
+              </div>
+              <div class="control-group">
+                <label>Sort:</label>
+                <div class="custom-select" id="sortMode">
+                  <button class="custom-select-trigger" type="button">
+                    <span class="custom-select-text">Top Rated</span>
+                    <span class="custom-select-arrow">▼</span>
+                  </button>
+                  <ul class="custom-select-menu">
+                    <li data-value="top_rated" class="selected">Top Rated</li>
+                    <li data-value="name_asc">Name A → Z</li>
+                    <li data-value="name_desc">Name Z → A</li>
+                    <li data-value="newest">Newest SCID</li>
+                    <li data-value="oldest">Oldest SCID</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <div id="search-status">Loading SCIDs...</div>
+        <div id="results">
+          <div class="no-results">Enter a search query to begin</div>
+        </div>
+      </div>
+
+      <div id="page-bookmarks" class="page">
+        <h2>Bookmarks</h2>
+        <div class="bookmark-section">
+          <h3>Bookmarked Nodes</h3>
+          <div id="bookmarked-nodes"><div class="no-results">No bookmarked nodes</div></div>
+        </div>
+        <div class="bookmark-section">
+          <h3>Bookmarked SCIDs</h3>
+          <div id="bookmarked-scids"><div class="no-results">No bookmarked SCIDs</div></div>
+        </div>
+      </div>
+
+      <div id="page-settings" class="page">
+        <h2>Settings</h2>
+
+        <div class="setting-section">
+          <h3 class="setting-section-title">Connection</h3>
+          <div class="setting-item">
+            <div class="setting-label">Default Node</div>
+            <input type="text" id="setting-default-node" placeholder="e.g. 127.0.0.1:10102" spellcheck="false">
+            <div class="setting-description">Auto-connected when the app starts</div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Auto-Connect</div>
+                <div class="setting-description" style="margin-bottom: 0;">Connect to the default node on startup</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-auto-connect">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Open Dashboard on Startup</div>
+                <div class="setting-description" style="margin-bottom: 0;">Automatically open the dashboard in your browser when HyperWolf starts</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-open-dashboard" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-section">
+          <h3 class="setting-section-title">Search</h3>
+          <div class="setting-item">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Direct Load SCIDs</div>
+                <div class="setting-description" style="margin-bottom: 0;">Automatically load SCID in a new tab when clicking a search result</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-direct-load" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label">Hidden Extensions</div>
+            <div class="tag-input" id="tag-input-container">
+              <div class="tag-list" id="tag-list"></div>
+              <input type="text" id="tag-input-field" placeholder="Type extension and press Enter" spellcheck="false">
+            </div>
+            <div class="setting-description">Extensions hidden from search results (e.g. .jpg, .js, .shards)</div>
+          </div>
+        </div>
+
+        <div class="setting-section">
+          <h3 class="setting-section-title">Data</h3>
+          <div class="setting-item">
+            <button id="reset-settings-btn" class="danger" style="width: 100%;">🔄 Reset All Settings to Defaults</button>
+            <div class="setting-description">Resets every setting to its original value</div>
+          </div>
+        </div>
+      </div>
+
+    <div id="page-help" class="page">
+      <h2>Help</h2>
+
+      <div class="setting-section">
+        <h3 class="setting-section-title">ℹ️ About HyperWolf</h3>
+        <div class="info-box">
+          <p><strong>HyperWolf</strong> is a standalone desktop application for browsing TELA decentralized applications on the DERO blockchain.</p>
+          <p>It allows you to:</p>
+          <ul>
+            <li>Start and control the local TELA server</li>
+            <li>Serve TELA sites as real web pages</li>
+            <li>Search and resolve SCIDs via the indexer</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h3 class="setting-section-title">🛠 Usage</h3>
+        <div class="info-box">
+          <ol>
+            <li>Enter a DERO node address and click <strong>Connect</strong></li>
+            <li>Wait for sync to complete</li>
+            <li>Search for TELA apps or paste a SCID directly</li>
+            <li>Click an app to open it in your browser</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h3 class="setting-section-title">🔗 Connect</h3>
+        <div class="info-box">
+          <ul>
+            <li>Use your <strong>own local node</strong> for best performance and reliability.</li>
+            <li>Public nodes also work well — find them on the <a href="#" class="nav-link" data-target="bookmarks"><strong>Bookmarks</strong></a> page.</li>
+            <li>First Gnomon sync ~<strong>17 seconds</strong>, SCID loading <strong>3–15 seconds</strong> depending on app size.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h3 class="setting-section-title">🔐 Web Socket (xswd)</h3>
+        <div class="info-box">
+          <p>You can browse TELA apps freely but XSWD (Dero WebSocket Daemon) is required by some TELA apps (like for example vault.tela) for wallet operations, to get the full TELA experience:</p>
+          <ol>
+            <li>Download the latest Engram release from <a href="https://github.com/moralpriest/Engram/releases" target="_blank">github.com/moralpriest/Engram/releases</a></li>
+            <li>Start your wallet, go to setting and turn on Web Sockets (WS)</li>
+            <li>HyperWolf listens on <code>ws://127.0.0.1:44326</code></li>
+          </ol>
+          <p>HyperWolf detects xswd automatically and shows its status in the sidebar.</p>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h3 class="setting-section-title">📁 Files</h3>
+        <div class="info-box">
+          <ul>
+            <li><code>~/.hyperwolf/</code> — config and index data</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-about" class="page">
+      <h2>About</h2>
+
+      <div class="setting-section">
+        <h3 class="setting-section-title">ℹ️ About HyperWolf</h3>
+        <div class="info-box">
+          <p><strong>Version:</strong> 0.7.7</p>
+          <p><strong>Description:</strong> Standalone desktop application to access TELA's decentralized applications and websites from the DERO blockchain.</p>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h3 class="setting-section-title">🛠 Built With</h3>
+        <div class="info-box">
+          <p>HyperWolf is powered by:</p>
+          <ul>
+            <li><a href="https://github.com/civilware/tela" target="_blank"><strong>Civilware Tela</strong></a> — TELA server for serving decentralized applications</li>
+            <li><a href="https://github.com/Dirtybird99/HyperGnomon" target="_blank"><strong>HyperGnomon</strong></a> — blockchain indexer for SCID discovery and search</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h3 class="setting-section-title">🔗 Resources</h3>
+        <div class="info-box">
+          <p><strong>📖 Docs</strong></p>
+          <p>Dero Foundation: <a href="https://www.derofoundation.org/" target="_blank"><strong>derofoundation.org</strong></a></p>
+          <p>Dero Reference Guide: <a href="https://derod.org/" target="_blank"><strong>derod.org</strong></a></p>
+          <p>Local Node Guide: <a href="https://dero.world/anotherworld/how-and-why-would-you-run-a-full-node/" target="_blank"><strong>How to run your own node?</strong></a></p>
+
+          <p style="margin-top: 16px;"><strong>💼 Wallets</strong></p>
+          <p>Engram GUI: <a href="https://github.com/moralpriest/Engram/releases" target="_blank"><strong>github.com/moralpriest/Engram</strong></a></p>
+
+          <p style="margin-top: 16px;"><strong>🌐 Ecosystem</strong></p>
+          <p>Dero World: <a href="https://dero.world" target="_blank"><strong>dero.world</strong></a></p>
+          <p>Hologram Browser: <a href="https://hologram.derod.org/" target="_blank"><strong>hologram.derod.org</strong></a></p>
+
+          <p style="margin-top: 16px;"><strong>📦 Github</strong></p>
+          <p>Dero Project: <a href="https://github.com/deroproject" target="_blank"><strong>github.com/deroproject</strong></a></p>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <script src="dashboard.js"></script>
+  <script src="fuse.min.js"></script>
+  <script src="search.js"></script>
+</body>
+</html>
