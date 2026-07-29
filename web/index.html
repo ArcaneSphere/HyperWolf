@@ -32,11 +32,13 @@
     </div>
   </div>
 
+  <div id="sidebar-backdrop"></div>
+
   <div id="sidebar">
     <div id="sidebar-header">
-      <button id="toggle-sidebar" title="Collapse sidebar">☰</button>
       <img id="sidebar-logo" src="icons/hyperwolf-96x96.png" alt="HyperWolf logo" />
-      <span class="sidebar-title"></span>
+      <span class="sidebar-title">HyperWolf</span>
+      <button id="sidebar-close" title="Close menu">✕</button>
     </div>
 
     <div id="sidebar-nav">
@@ -100,6 +102,7 @@
 
   <div id="main">
     <div id="header">
+      <button id="menu-toggle" title="Menu">☰</button>
       <div class="input-row top-input">
         <div class="input-wrapper">
           <input id="node" placeholder="Node address (e.g. 127.0.0.1:10102)">
@@ -221,7 +224,12 @@
           <div class="search-sticky">
             <div class="input-row">
               <div class="input-wrapper">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
                 <input id="searchBox" type="text" placeholder="Search for SCIDs, nodes, or content..." disabled>
+                <button id="searchClear" class="icon" title="Clear search">✕</button>
                 <div id="searchSuggestions" class="search-dropdown hidden"></div>
               </div>
             </div>
@@ -247,10 +255,16 @@
                   </ul>
                 </div>
               </div>
+              <div class="control-group">
+                <label for="showAllToggle">All SCIDs</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="showAllToggle">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div id="search-status">Loading SCIDs...</div>
             </div>
           </div>
-
-        <div id="search-status">Loading SCIDs...</div>
         <div id="results">
           <div class="no-results">Enter a search query to begin</div>
         </div>
@@ -405,7 +419,7 @@
       <div class="setting-section">
         <h3 class="setting-section-title">ℹ️ About HyperWolf</h3>
         <div class="info-box">
-          <p><strong>Version:</strong> 0.7.7</p>
+          <p><strong>Version:</strong> 0.8.3</p>
           <p><strong>Description:</strong> Standalone desktop application to access TELA's decentralized applications and websites from the DERO blockchain.</p>
         </div>
       </div>

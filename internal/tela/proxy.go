@@ -86,6 +86,18 @@ func (pm *ProxyManager) Reset() {
 	pm.mu.Unlock()
 }
 
+// writeJSONError sends a JSON error response consistent with writeJSON's shape
+// so that upstream callers (e.g. handleLoadSCID in router.go) always get
+// parseable JSON regardless of success or failure.
+func writeJSONError(w http.ResponseWriter, msg string, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(map[string]any{
+		"ok":    false,
+		"error": msg,
+	})
+}
+
 func (pm *ProxyManager) handleAddSCID(w http.ResponseWriter, r *http.Request) {
 	scid := strings.TrimPrefix(r.URL.Path, "/add/")
 	scid = strings.Split(scid, "/")[0]
@@ -94,7 +106,7 @@ func (pm *ProxyManager) handleAddSCID(w http.ResponseWriter, r *http.Request) {
 
 	node := pm.nodeFn()
 	if node == "" {
-		http.Error(w, "node not set", 400)
+		writeJSONError(w, "node not set", http.StatusBadRequest)
 		return
 	}
 
@@ -119,7 +131,14 @@ func (pm *ProxyManager) handleAddSCID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		log.Printf("[ADD] %s — ServeTELA error: %v", scid, err)
+		writeJSONError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if rawURL == "" {
+		log.Printf("[ADD] %s — ServeTELA returned empty URL (no error)", scid)
+		writeJSONError(w, "SCID returned empty URL", http.StatusInternalServerError)
 		return
 	}
 

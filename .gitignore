@@ -36,3 +36,6 @@ node_modules/
 package.json
 package-lock.json
 bun.lock
+
+# --- Reference copies (not part of this project) ---
+hypergnomon_src/

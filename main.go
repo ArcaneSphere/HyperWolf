@@ -31,6 +31,7 @@ var (
 	dashboardPort = flag.Int("dashboard-port", 18080, "dashboard HTTP server port")
 	telaPort      = flag.Int("tela-port", 18081, "TELA proxy port")
 	gnomonPort    = flag.Int("gnomon-api", 18082, "HyperGnomon API port")
+	gnomonWSPort  = flag.Int("gnomon-ws", 40403, "Gnomon WebSocket JSON-RPC port (TELA apps use this as fallback when XSWD is unavailable)")
 	logFile       = flag.String("log-file", "", "log file path (default: ~/.hyperwolf/hyperwolf.log)")
 	installFlag   = flag.Bool("install", false, "install desktop entries and autostart, then exit")
 	uninstallFlag = flag.Bool("uninstall", false, "remove all desktop entries and installed binary, then exit")
@@ -66,7 +67,7 @@ func main() {
 	appState := state.New()
 	hub := router.NewHub()
 
-	syncMgr := indexer.NewSyncManager(*gnomonPort, func(msg map[string]any) {
+	syncMgr := indexer.NewSyncManager(*gnomonPort, *gnomonWSPort, func(msg map[string]any) {
 		hub.Send(msg)
 	})
 

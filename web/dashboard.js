@@ -8,7 +8,9 @@
 
 // ================= ELEMENTS =================
 const sidebar = document.getElementById("sidebar");
-const toggleSidebarBtn = document.getElementById("toggle-sidebar");
+const sidebarBackdrop = document.getElementById("sidebar-backdrop");
+const menuToggleBtn = document.getElementById("menu-toggle");
+const sidebarCloseBtn = document.getElementById("sidebar-close");
 const statusEl = document.getElementById("status");
 const navItems = document.querySelectorAll(".nav-item");
 const pages = document.querySelectorAll(".page");
@@ -86,7 +88,31 @@ themeToggle.onclick = () => {
 };
 
 // ================= NAV =================
-toggleSidebarBtn.onclick = () => sidebar.classList.toggle("collapsed");
+// ================= SIDEBAR OVERLAY =================
+function openSidebar() {
+  sidebar.classList.add("sidebar-open");
+  sidebarBackdrop.classList.add("active");
+}
+
+function closeSidebar() {
+  sidebar.classList.remove("sidebar-open");
+  sidebarBackdrop.classList.remove("active");
+}
+
+function toggleSidebar() {
+  if (sidebar.classList.contains("sidebar-open")) closeSidebar();
+  else openSidebar();
+}
+
+if (menuToggleBtn) menuToggleBtn.onclick = toggleSidebar;
+if (sidebarCloseBtn) sidebarCloseBtn.onclick = closeSidebar;
+if (sidebarBackdrop) sidebarBackdrop.onclick = closeSidebar;
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && sidebar.classList.contains("sidebar-open")) {
+    closeSidebar();
+  }
+});
 
 /**
  * Navigates to a named page in the single-page application.
@@ -106,7 +132,10 @@ function navigateTo(page) {
 }
 
 navItems.forEach(item => {
-  item.onclick = () => navigateTo(item.dataset.page);
+  item.onclick = () => {
+    navigateTo(item.dataset.page);
+    closeSidebar();
+  };
 });
 
 document.addEventListener("DOMContentLoaded", () => {

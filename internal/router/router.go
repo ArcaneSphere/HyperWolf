@@ -280,10 +280,34 @@ func (h *Handlers) handleLoadSCID(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	var res map[string]any
-	json.NewDecoder(resp.Body).Decode(&res)
+	// Read and log the raw body for diagnostics, then re-decode.
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	log.Printf("load_scid: proxy responded with status %d for %s", resp.StatusCode, scid)
 
-	result, _ := res["result"].(map[string]any)
+	if resp.StatusCode != http.StatusOK {
+		// The TELA proxy now returns JSON errors, so try to extract the message.
+		var errResp struct {
+			OK    bool   `json:"ok"`
+			Error string `json:"error"`
+		}
+		if json.Unmarshal(bodyBytes, &errResp) == nil && errResp.Error != "" {
+			writeJSON(w, ctrlResp{OK: false, Error: "TELA proxy: " + errResp.Error})
+			return
+		}
+		writeJSON(w, ctrlResp{OK: false, Error: "TELA proxy returned status " + http.StatusText(resp.StatusCode)})
+		return
+	}
+
+	var res struct {
+		Result struct {
+			URL string `json:"url"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(bodyBytes, &res); err != nil || res.Result.URL == "" {
+		log.Printf("load_scid: JSON parse failure or empty url for %s: %v — body: %s", scid, err, string(bodyBytes))
+		writeJSON(w, ctrlResp{OK: false, Error: "SCID loaded but no URL returned from proxy"})
+		return
+	}
 
 	if h.Sync.Indexer != nil {
 		go h.Sync.IndexSCIDNow(scid)
@@ -291,26 +315,27 @@ func (h *Handlers) handleLoadSCID(w http.ResponseWriter, r *http.Request) {
 		log.Printf("load_scid: indexer not ready yet, skipping SCID indexing for %s", scid)
 	}
 
-	urlStr, _ := result["url"].(string)
 	writeJSON(w, ctrlResp{OK: true, Result: map[string]any{
-		"url": urlStr,
+		"url": res.Result.URL,
 	}})
 }
 
 func (h *Handlers) handleAddTELA(w http.ResponseWriter, r *http.Request) {
 	scid := r.PathValue("scid")
 	if scid == "" {
-		http.Error(w, "missing SCID", 400)
+		writeJSON(w, ctrlResp{OK: false, Error: "missing SCID"})
 		return
 	}
 	// Forward to the TELA proxy's add handler
 	proxyURL := fmt.Sprintf("http://127.0.0.1:%d/add/%s", h.TelaPort, scid)
 	resp, err := http.Get(proxyURL)
 	if err != nil {
-		http.Error(w, err.Error(), 502)
+		writeJSON(w, ctrlResp{OK: false, Error: err.Error()})
 		return
 	}
 	defer resp.Body.Close()
+	// Forward the exact status code and body (now always JSON with ok/error fields).
+	w.WriteHeader(resp.StatusCode)
 	w.Header().Set("Content-Type", "application/json")
 	io.Copy(w, resp.Body)
 }

@@ -37,12 +37,15 @@ type SyncManager struct {
 	tipSyncedSent bool
 	sendEvent    EventSender
 	gnomonPort   int
+	gnomonWSPort int
+	GnomonWS     *GnomonWSServer
 }
 
-func NewSyncManager(gnomonPort int, sendEvent EventSender) *SyncManager {
+func NewSyncManager(gnomonPort, gnomonWSPort int, sendEvent EventSender) *SyncManager {
 	return &SyncManager{
-		gnomonPort: gnomonPort,
-		sendEvent:  sendEvent,
+		gnomonPort:   gnomonPort,
+		gnomonWSPort: gnomonWSPort,
+		sendEvent:    sendEvent,
 	}
 }
 
@@ -52,16 +55,6 @@ func (sm *SyncManager) InitStorage() error {
 		return fmt.Errorf("could not find home dir: %w", err)
 	}
 	sm.DBDir = filepath.Join(home, ".hyperwolf", "gnomondb")
-
-	// Delete any old index database before we start — FastSync is fast (~4s on
-	// a local daemon) and always gives us fresh data. Keeping a multi-GB bbolt
-	// DB from a previous run just slows startup without providing usable
-	// "resumable sync" benefits for an app that starts and stops frequently.
-	dbFile := filepath.Join(sm.DBDir, "hypergnomon.db")
-	if fi, err := os.Stat(dbFile); err == nil && fi.Size() > 0 {
-		log.Printf("Removing stale index DB (%.1f MB) for a fresh sync", float64(fi.Size())/1_048_576)
-		os.Remove(dbFile)
-	}
 
 	if err := os.MkdirAll(sm.DBDir, 0755); err != nil {
 		return fmt.Errorf("mkdir db dir: %w", err)
@@ -141,14 +134,22 @@ func (sm *SyncManager) StartSync(node string) {
 	hgstructures.Logger.SetLevel(logrus.WarnLevel)
 
 	go func() {
-		log.Println("TELA discovery: FastSync starting...")
-		if err := activeIndexer.FastSync(false); err != nil {
-			log.Printf("FastSync error: %v", err)
+		lastHeight := activeIndexer.LastIndexedHeight.Load()
+		if lastHeight > 0 {
+			// DB has data from a previous session — skip FastSync entirely.
+			// StartDaemonMode resumes from LastIndexedHeight via scanLoop.
+			log.Printf("Existing index found at height %d — skipping FastSync, resuming daemon scan", lastHeight)
 		} else {
-			log.Println("TELA discovery: FastSync complete, probeTELA running in background")
-			// Save the freshly-discovered app catalog so the next startup
-			// has immediate data without waiting for a new sync.
-			sm.saveAppCache()
+			// Fresh DB — run FastSync for initial bootstrap.
+			log.Println("TELA discovery: FastSync starting...")
+			if err := activeIndexer.FastSync(false); err != nil {
+				log.Printf("FastSync error: %v", err)
+			} else {
+				log.Println("TELA discovery: FastSync complete, probeTELA running in background")
+				// Save the freshly-discovered app catalog so the next startup
+				// has immediate data without waiting for a new sync.
+				sm.saveAppCache()
+			}
 		}
 
 		go activeIndexer.StartDaemonMode()
@@ -156,7 +157,7 @@ func (sm *SyncManager) StartSync(node string) {
 
 	lastHeight := activeIndexer.LastIndexedHeight.Load()
 	chainHeight := activeIndexer.ChainHeight.Load()
-	log.Printf("HyperGnomon started: chain=%d indexed=%d (fastsync running in background)", chainHeight, lastHeight)
+	log.Printf("HyperGnomon started: chain=%d indexed=%d", chainHeight, lastHeight)
 
 	{
 		sm.APIServer = hgapi.NewServer(
@@ -174,6 +175,22 @@ func (sm *SyncManager) StartSync(node string) {
 			}
 		}()
 		log.Printf("HyperGnomon API listening on :%d", sm.gnomonPort)
+	}
+
+	// Start Gnomon-compatible WebSocket JSON-RPC server. TELA apps in the
+	// browser fall back to this when XSWD (the wallet bridge) does not
+	// expose DERO.GetSC. The standard Gnomon WS port is 40403.
+	// Also serves /xswd for apps that speak the XSWD wallet-bridge protocol.
+	{
+		wsAddr := fmt.Sprintf("127.0.0.1:%d", sm.gnomonWSPort)
+		daemonURL := node // reuse the same node the indexer connects to
+		sm.GnomonWS = NewGnomonWSServer(wsAddr, activeIndexer.Store, daemonURL, activeIndexer)
+		go func() {
+			if err := sm.GnomonWS.Start(); err != nil {
+				log.Printf("Gnomon WS server exited: %v", err)
+			}
+		}()
+		log.Printf("Gnomon WS JSON-RPC listening on %s/ws", wsAddr)
 	}
 
 	go func() {
@@ -251,6 +268,10 @@ func (sm *SyncManager) StopSync() {
 	if sm.syncCancel != nil {
 		close(sm.syncCancel)
 		sm.syncCancel = nil
+	}
+	if sm.GnomonWS != nil {
+		sm.GnomonWS.Stop()
+		sm.GnomonWS = nil
 	}
 	sm.StopIndexer()
 }

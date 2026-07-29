@@ -9,6 +9,8 @@
   const minRatingVal = document.getElementById("minRatingVal");
   const scidInput    = document.getElementById("scid");
   const loadBtn      = document.getElementById("load");
+  const searchClear  = document.getElementById("searchClear");
+  const showAllToggle = document.getElementById("showAllToggle");
 
   if (!searchBox || !resultsEl) return;
 
@@ -27,6 +29,7 @@
   let allResults = [];
   let fuse       = null;
   let minRating  = 30;
+  let showAllSCIDs = false;
   let loadToken  = 0;
   let resultsLoaded = false;
   let metadataRetries = 0;
@@ -94,7 +97,7 @@
             threshold: 0.25,
             ignoreLocation: true
           });
-          renderResults(allResults);
+          refreshResults();
           statusEl.textContent = `✅ Loaded ${allResults.length} apps (direct)`;
         }
       } catch (e) {
@@ -139,7 +142,7 @@
         }
         fuse.setCollection(allResults);
         statusEl.textContent = `✅ Loaded ${allResults.length} apps`;
-        renderResults(allResults);
+        refreshResults();
       }
 
       if (token !== loadToken) return;
@@ -168,7 +171,7 @@
         await Promise.all(Array(concurrency).fill().map(worker));
         fuse.setCollection(allResults);
         statusEl.textContent = `✅ Loaded ${allResults.length} apps`;
-        renderResults(allResults);
+        refreshResults();
       }
 
       if (token !== loadToken) return;
@@ -198,7 +201,7 @@
             }
             fuse.setCollection(allResults);
             statusEl.textContent = `✅ Loaded ${allResults.length} apps`;
-            renderResults(allResults);
+            refreshResults();
           }
         } catch (e) {
           console.warn("Daemon RPC fallback failed", e);
@@ -252,7 +255,7 @@
         li.classList.add("selected");
         textEl.textContent = li.textContent;
         select.classList.remove("open");
-        renderResults(allResults);
+        refreshResults();
       });
     });
     document.addEventListener("click", () => { select.classList.remove("open"); });
@@ -281,6 +284,26 @@
         <polygon points="432.54,420.32 502.73,461.22 502.73,542 464.66,563.58 485.09,694.51 433.7,724.39 378.96,692.5 400.62,564.62 362.1,541.19 362.1,461.28 432.54,420.32" fill="none" stroke="currentColor" stroke-width="6"/>
       </svg>`;
     return div;
+  }
+
+  function showCleanState() {
+    resultsEl.replaceChildren();
+    statusEl.textContent = "";
+    const msg = document.createElement("div");
+    msg.className = "no-results";
+    msg.textContent = "Enter a search query to begin";
+    resultsEl.appendChild(msg);
+  }
+
+  function refreshResults() {
+    const query = searchBox.value.trim();
+    if (query) {
+      runSearch(query);
+    } else if (showAllSCIDs) {
+      renderResults(allResults);
+    } else {
+      showCleanState();
+    }
   }
 
   function renderResults(results) {
@@ -375,11 +398,17 @@
     const items = searchSuggestions.querySelectorAll(".search-suggestion");
     items.forEach((el, i) => { el.classList.toggle("selected", i === suggestionIndex); if (i === suggestionIndex) el.scrollIntoView({ block: "nearest", behavior: "smooth" }); });
     if (suggestionIndex >= 0 && suggestionResults[suggestionIndex]) searchBox.value = suggestionResults[suggestionIndex].dURL;
+    updateSearchClear();
   }
 
-  function runSearch(value) {
+  function runSearch(value, { showResults = true } = {}) {
     const query = value.trim();
-    if (!query) { renderResults(allResults); hideSuggestions(); return; }
+    if (!query) {
+      if (showAllSCIDs) renderResults(allResults);
+      else showCleanState();
+      hideSuggestions();
+      return;
+    }
     if (!fuse) return;
     // Search always operates on the current allResults.  Because allResults can
     // grow asynchronously (metadata merge, WS events), we snapshot scids before
@@ -395,11 +424,29 @@
       seen.add(r.scid);
       if (snapshotScids.has(r.scid)) clamped.push(r);
     }
-    renderResults(clamped);
+    if (showResults) renderResults(clamped);
     renderSuggestions(clamped.filter(r => (r.dURL || "").toLowerCase().includes(query.toLowerCase())));
   }
 
-  searchBox.addEventListener("input", e => { suggestionIndex = -1; runSearch(e.target.value); });
+  searchBox.addEventListener("input", e => { suggestionIndex = -1; updateSearchClear(); runSearch(e.target.value, { showResults: showAllSCIDs }); });
+
+  function updateSearchClear() {
+    if (!searchClear) return;
+    const hasText = searchBox.value.length > 0;
+    searchClear.classList.toggle("active", hasText);
+    searchBox.classList.toggle("has-clear", hasText);
+  }
+
+  if (searchClear) {
+    searchClear.addEventListener("click", (e) => {
+      e.preventDefault();
+      searchBox.value = "";
+      updateSearchClear();
+      runSearch("");
+      hideSuggestions();
+      searchBox.focus();
+    });
+  }
 
   searchBox.addEventListener("keydown", e => {
     const items = searchSuggestions.querySelectorAll(".search-suggestion");
@@ -412,6 +459,9 @@
     if (e.key === "Enter") {
       const selected = suggestionResults[suggestionIndex];
       if (selected) { e.preventDefault(); handleSCIDClick(selected.scid); hideSuggestions(); return; }
+      // No suggestion selected: run search and show results
+      runSearch(searchBox.value, { showResults: true });
+      hideSuggestions();
     }
   });
 
@@ -420,15 +470,22 @@
   });
   searchBox.addEventListener("blur", () => { setTimeout(hideSuggestions, 150); });
 
-  minRatingEl?.addEventListener("input", e => { minRating = Number(e.target.value); minRatingVal.textContent = minRating; renderResults(allResults); });
+  minRatingEl?.addEventListener("input", e => { minRating = Number(e.target.value); minRatingVal.textContent = minRating; refreshResults(); });
 
   initSortDropdown();
+
+  if (showAllToggle) {
+    showAllToggle.addEventListener("change", () => {
+      showAllSCIDs = showAllToggle.checked;
+      refreshResults();
+    });
+  }
 
   document.addEventListener("pageChanged", async (e) => {
     if (e.detail.page === "search") {
       metadataRetries = 0;
       if (!resultsLoaded) { await loadSearchSCIDs(); }
-      else { renderResults(allResults); if (searchBox.value) runSearch(searchBox.value); }
+      else { refreshResults(); }
     }
   });
 
@@ -469,7 +526,7 @@
           if (allResults.some(r => r.scid === msg.scid)) return;
           allResults.push(entry);
           fuse.setCollection(allResults);
-          renderResults(allResults);
+          refreshResults();
           if (statusEl) { const cnt = allResults.length; statusEl.textContent = `✅ Loaded ${cnt} app${cnt !== 1 ? "s" : ""} (direct)`; }
         } catch (e) { console.warn("Failed to add newly discovered SCID:", e); }
       })();
