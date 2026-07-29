@@ -128,8 +128,8 @@ body {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 #sidebar-backdrop.active {
@@ -462,6 +462,7 @@ body {
   padding: 32px;
   overflow-y: auto;
   background: var(--bg);
+  scrollbar-gutter: stable;
 }
 
 .page {

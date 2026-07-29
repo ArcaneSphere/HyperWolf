@@ -629,7 +629,7 @@ function renderBookmarks() {
   if (!scids.length) bookmarkedScidsEl.appendChild(createNoResults("No bookmarked SCIDs"));
   else scids.forEach(b => bookmarkedScidsEl.appendChild(createBookmarkItem(
     b.label, b.scid,
-    () => { scidInput.value = b.scid; updateBookmarkButtons(); },
+    () => { scidInput.value = b.scid; updateBookmarkButtons(); loadBtn.click(); },
     () => { delete bookmarks.scids[b.scid]; saveBookmarks(); }
   )));
   const badge = document.getElementById("bookmark-badge");
