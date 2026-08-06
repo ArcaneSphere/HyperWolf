@@ -18,25 +18,27 @@ import (
 )
 
 type ProxyManager struct {
-	mu       sync.RWMutex
-	proxies  map[string]*httputil.ReverseProxy
-	baseURLs map[string]string
-	entries  map[string]string
-	sharded  map[string]bool
-	port     int
-	once     sync.Once
+	mu        sync.RWMutex
+	proxies   map[string]*httputil.ReverseProxy
+	baseURLs  map[string]string
+	entries   map[string]string
+	sharded   map[string]bool
+	scidLocks map[string]*sync.Mutex // per-SCID mutexes for TOCTOU protection
+	port      int
+	once      sync.Once
 
 	nodeFn func() string
 }
 
 func NewProxyManager(port int, nodeFn func() string) *ProxyManager {
 	return &ProxyManager{
-		proxies:  map[string]*httputil.ReverseProxy{},
-		baseURLs: map[string]string{},
-		entries:  map[string]string{},
-		sharded:  map[string]bool{},
-		port:     port,
-		nodeFn:   nodeFn,
+		proxies:   map[string]*httputil.ReverseProxy{},
+		baseURLs:  map[string]string{},
+		entries:   map[string]string{},
+		sharded:   map[string]bool{},
+		scidLocks: map[string]*sync.Mutex{},
+		port:      port,
+		nodeFn:    nodeFn,
 	}
 }
 
@@ -83,7 +85,18 @@ func (pm *ProxyManager) Reset() {
 	pm.baseURLs = map[string]string{}
 	pm.entries = map[string]string{}
 	pm.sharded = map[string]bool{}
+	pm.scidLocks = map[string]*sync.Mutex{}
 	pm.mu.Unlock()
+}
+
+func (pm *ProxyManager) getSCIDLock(scid string) *sync.Mutex {
+	pm.mu.Lock()
+	if pm.scidLocks[scid] == nil {
+		pm.scidLocks[scid] = &sync.Mutex{}
+	}
+	lock := pm.scidLocks[scid]
+	pm.mu.Unlock()
+	return lock
 }
 
 // writeJSONError sends a JSON error response consistent with writeJSON's shape
@@ -110,6 +123,21 @@ func (pm *ProxyManager) handleAddSCID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fast path: check if already loaded (read lock)
+	pm.mu.RLock()
+	if base, ok := pm.baseURLs[scid]; ok {
+		pm.mu.RUnlock()
+		writeJSON(w, scid, base)
+		return
+	}
+	pm.mu.RUnlock()
+
+	// Slow path: acquire per-SCID lock to prevent duplicate ServeTELA calls
+	lock := pm.getSCIDLock(scid)
+	lock.Lock()
+	defer lock.Unlock()
+
+	// Re-check under lock (double-checked locking)
 	pm.mu.RLock()
 	if base, ok := pm.baseURLs[scid]; ok {
 		pm.mu.RUnlock()
@@ -162,8 +190,16 @@ func (pm *ProxyManager) handleAddSCID(w http.ResponseWriter, r *http.Request) {
 		req.URL.Host = target.Host
 		req.Host = target.Host
 	}
+	// Instead of stripping CSP entirely, set a permissive but explicit policy
+	// that allows inline scripts/styles (needed by many TELA apps) while
+	// still providing a security baseline.
 	proxy.ModifyResponse = func(resp *http.Response) error {
-		resp.Header.Del("Content-Security-Policy")
+		resp.Header.Set("Content-Security-Policy",
+			"default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; "+
+				"script-src 'self' 'unsafe-inline' 'unsafe-eval'; "+
+				"style-src 'self' 'unsafe-inline'; "+
+				"img-src 'self' data: blob:; "+
+				"connect-src 'self' ws: wss:;")
 		return nil
 	}
 

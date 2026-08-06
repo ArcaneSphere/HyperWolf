@@ -19,7 +19,6 @@ Thumbs.db
 *.code-workspace
 
 # --- Go ---
-vendor/
 *.test
 *.test.exe
 *.out

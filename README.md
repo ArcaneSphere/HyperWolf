@@ -13,7 +13,6 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License"></a>
   <a href="#"><img src="https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows-lightgrey" alt="Platforms"></a>
   <a href="#"><img src="https://img.shields.io/badge/status-beta-yellow" alt="Status: Beta"></a>
-  <a href="DOCS.md"><img src="https://img.shields.io/badge/docs-DOCS.md-blue" alt="Documentation"></a>
 </p>
 
 <p align="center">
@@ -23,8 +22,7 @@
     <a href="#quick-start">Quick Start</a> •
     <a href="#usage">Usage</a> •
     <a href="#cli-flags">CLI Flags</a> •
-    <a href="#build">Build</a> •
-    <a href="DOCS.md">Full Docs</a>
+    <a href="#build">Build</a>
   </b>
 </p>
 
@@ -238,8 +236,6 @@ Settings are stored in `~/.hyperwolf/config.json`. This file is created automati
 | `desktop/` | Cross-platform desktop integration (install/uninstall) |
 | `tray/` | System tray icon with connection status LED |
 
-> 🔍 A complete technical deep-dive is available in **[DOCS.md](DOCS.md)**.
-
 ---
 
 ## API Overview
@@ -259,8 +255,6 @@ HyperWolf exposes a REST + WebSocket API on the dashboard port. Here are the key
 | `GET` | `/ws` | WebSocket endpoint for real-time events |
 
 **WebSocket events:** `sync_progress`, `tip_synced`, `catalog_progress`, `new_tela_app`, `node_unreachable`, `node_recovered`
-
-> 📘 Full API reference with request/response schemas is in **[DOCS.md](DOCS.md#18-api-reference)**.
 
 ---
 
@@ -322,7 +316,7 @@ HyperWolf can install itself as a first-class desktop application on all three m
 
 HyperWolf is in **beta** — actively used but evolving. The core feature set (TELA browsing, search, system tray, desktop integration) is stable.
 
-**Version:** 0.8.4  
+**Version:** 0.8.5  
 **License:** [MIT](LICENSE)  
 
 ### Roadmap Ideas

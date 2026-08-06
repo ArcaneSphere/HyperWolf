@@ -1,6 +1,7 @@
 package indexer
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -8,12 +9,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	bolt "go.etcd.io/bbolt"
 
 	hgapi "github.com/hypergnomon/hypergnomon/api"
 	hgindexer "github.com/hypergnomon/hypergnomon/indexer"
+	hgstorage "github.com/hypergnomon/hypergnomon/storage"
 	hgstructures "github.com/hypergnomon/hypergnomon/structures"
 )
 
@@ -30,15 +35,58 @@ type TelaAppInfo struct {
 }
 
 type SyncManager struct {
-	Indexer      *hgindexer.Indexer
-	APIServer    *hgapi.Server
-	DBDir        string
-	syncCancel   chan struct{}
+	mu            sync.Mutex // guards Indexer, APIServer, GnomonWS, syncCancel, syncDone
+	Indexer       *hgindexer.Indexer
+	APIServer     *hgapi.Server
+	DBDir         string
+	syncCancel    chan struct{}
+	syncDone      chan struct{} // closed when all sync goroutines exit
 	tipSyncedSent bool
-	sendEvent    EventSender
-	gnomonPort   int
-	gnomonWSPort int
-	GnomonWS     *GnomonWSServer
+	sendEvent     EventSender
+	// OnHealthChange is invoked whenever daemon connectivity flips:
+	// false = node unreachable, true = node recovered. Optional; used to
+	// drive the tray status icon from passive daemon health.
+	OnHealthChange func(bool)
+	gnomonPort     int
+	gnomonWSPort   int
+	GnomonWS       *GnomonWSServer
+	// discoverLastCount tracks the last app count we logged, so repeated
+	// DiscoverTelaApps() polls (status refresh every 5s, sync ticker) don't
+	// spam the log with identical lines. It is touched from HTTP handler
+	// goroutines and the sync ticker goroutine, so it must be atomic.
+	discoverLastCount atomic.Int64
+}
+
+// indexerSnapshot returns the current indexer pointer under lock. The caller
+// can use the returned value without holding the lock; atomic fields on the
+// indexer are safe for concurrent reads.
+func (sm *SyncManager) indexerSnapshot() *hgindexer.Indexer {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+	return sm.Indexer
+}
+
+// GetIndexedHeight returns the current indexed height, or 0 if no indexer.
+func (sm *SyncManager) GetIndexedHeight() int64 {
+	idx := sm.indexerSnapshot()
+	if idx == nil {
+		return 0
+	}
+	return idx.LastIndexedHeight.Load()
+}
+
+// GetChainHeight returns the chain height as known to the indexer.
+func (sm *SyncManager) GetChainHeight() int64 {
+	idx := sm.indexerSnapshot()
+	if idx == nil {
+		return 0
+	}
+	return idx.ChainHeight.Load()
+}
+
+// HasIndexer reports whether an active indexer instance is running.
+func (sm *SyncManager) HasIndexer() bool {
+	return sm.indexerSnapshot() != nil
 }
 
 func NewSyncManager(gnomonPort, gnomonWSPort int, sendEvent EventSender) *SyncManager {
@@ -71,15 +119,65 @@ func (sm *SyncManager) StartSync(node string) {
 	nodeForIndexer := strings.TrimPrefix(node, "http://")
 	nodeForIndexer = strings.TrimPrefix(nodeForIndexer, "https://")
 
+	// Cancel previous sync and wait for all goroutines to exit.
+	sm.mu.Lock()
 	if sm.syncCancel != nil {
 		close(sm.syncCancel)
-		time.Sleep(500 * time.Millisecond)
+		sm.mu.Unlock()
+		if sm.syncDone != nil {
+			<-sm.syncDone
+		}
+		sm.mu.Lock()
 	}
+
+	// Set up new sync lifecycle channels.
 	sm.syncCancel = make(chan struct{})
+	sm.syncDone = make(chan struct{})
+	// Re-arm tip_synced so it fires again on every connect/reconnect. Without
+	// this the event is sent exactly once per process lifetime, and a dashboard
+	// that opened late (or whose WebSocket reconnected) would never see it —
+	// leaving the Search page on stale cached results until a manual refresh.
+	sm.tipSyncedSent = false
 	cancel := sm.syncCancel
+	done := sm.syncDone
+	var wg sync.WaitGroup
+	sm.mu.Unlock()
 
-	go sm.watchDaemonHealth(node, cancel)
+	// Close done when all sync goroutines (including the setup goroutine
+	// below and everything it spawns) have exited. All wg.Add calls happen
+	// before this waiter is launched, so there is no WaitGroup-misuse race.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		sm.runSyncSetup(node, cancel, done, &wg)
+	}()
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
 
+	// Watch daemon health independently; it exits on cancel.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		sm.watchDaemonHealth(node, cancel)
+	}()
+}
+
+// runSyncSetup performs the slow, cancellable portion of StartSync: waiting
+// for the daemon to answer, constructing the indexer, and starting the
+// long-lived API/WS servers, then launching the FastSync + progress-ticker
+// goroutines as children of this goroutine (all tracked in wg). Because every
+// Add happens inside this goroutine while wg.Wait() may already be running in
+// the waiter goroutine, we must guarantee the waiter's first Wait happens
+// only after all Adds: that is achieved by the outer wg.Add(1) for THIS
+// goroutine, which is added before the waiter starts. Nested Adds made here
+// before this goroutine returns are still racing with the outer Wait — so we
+// add the children FIRST (all of them), then return; the waiter only sees a
+// consistent counter because the outer Add for this goroutine is already
+// counted when the waiter starts, and nested Adds happen before this function
+// returns, which is before wg.Wait can observe the counter dropping to zero.
+func (sm *SyncManager) runSyncSetup(node string, cancel chan struct{}, done chan struct{}, wg *sync.WaitGroup) {
 	targetHeight := int64(0)
 	retries := 0
 	for targetHeight == 0 {
@@ -109,18 +207,18 @@ func (sm *SyncManager) StartSync(node string) {
 
 	home, _ := os.UserHomeDir()
 	cfg := hgindexer.Config{
-		Endpoint:       nodeForIndexer,
-		DBDir:          filepath.Join(home, ".hyperwolf", "gnomondb"),
-		SearchFilter:   nil,
-		ParallelBlocks: 32,
-		BatchSize:      1000,
-		PoolSize:       16,
-		TurboMode:      true,
+		Endpoint:         strings.TrimPrefix(strings.TrimPrefix(node, "http://"), "https://"),
+		DBDir:            filepath.Join(home, ".hyperwolf", "gnomondb"),
+		SearchFilter:     nil,
+		ParallelBlocks:   32,
+		BatchSize:        1000,
+		PoolSize:         16,
+		TurboMode:        true,
 		PostScanVarsMode: "lazy",
 		AdaptBatchSize:   true,
-		RecentBlocks:    500,
-		CodePolicy:      "none",
-		FinalityDepth:   3,
+		RecentBlocks:     500,
+		CodePolicy:       "none",
+		FinalityDepth:    3,
 	}
 	log.Printf("HyperGnomon config: DBDir=%s Endpoint=%s", cfg.DBDir, cfg.Endpoint)
 
@@ -129,25 +227,67 @@ func (sm *SyncManager) StartSync(node string) {
 		log.Printf("HyperGnomon indexer: %v", err)
 		return
 	}
+	sm.mu.Lock()
 	sm.Indexer = activeIndexer
+	sm.mu.Unlock()
 
 	hgstructures.Logger.SetLevel(logrus.WarnLevel)
 
+	{
+		// API server: long-lived, NOT in the waitgroup; stopped explicitly.
+		apiServer := hgapi.NewServer(
+			activeIndexer.Store,
+			activeIndexer.RPCPool,
+			fmt.Sprintf("127.0.0.1:%d", sm.gnomonPort),
+			&activeIndexer.SafeHeight,
+			&activeIndexer.ReorgDetected,
+			nil,
+			activeIndexer,
+			0,
+		)
+		sm.mu.Lock()
+		sm.APIServer = apiServer
+		sm.mu.Unlock()
+		go func() {
+			if err := apiServer.Start(); err != nil {
+				log.Printf("HyperGnomon API server exited: %v", err)
+			}
+		}()
+		log.Printf("HyperGnomon API listening on :%d", sm.gnomonPort)
+	}
+
+	{
+		// Gnomon-compatible WS server: long-lived, NOT in the waitgroup;
+		// stopped explicitly by StopSync via GnomonWS.Stop().
+		wsAddr := fmt.Sprintf("127.0.0.1:%d", sm.gnomonWSPort)
+		daemonURL := node // reuse the same node the indexer connects to
+		wsServer := NewGnomonWSServer(wsAddr, activeIndexer.Store, daemonURL, activeIndexer)
+		sm.mu.Lock()
+		sm.GnomonWS = wsServer
+		sm.mu.Unlock()
+		go func() {
+			if err := wsServer.Start(); err != nil {
+				log.Printf("Gnomon WS server exited: %v", err)
+			}
+		}()
+		log.Printf("Gnomon WS JSON-RPC listening on %s/ws", wsAddr)
+	}
+
+	// FastSync: runs as a child of this setup goroutine and is in the wg, so
+	// done cannot close while it is still running (prevents double-FastSync on
+	// a subsequent StartSync).
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		lastHeight := activeIndexer.LastIndexedHeight.Load()
 		if lastHeight > 0 {
-			// DB has data from a previous session — skip FastSync entirely.
-			// StartDaemonMode resumes from LastIndexedHeight via scanLoop.
 			log.Printf("Existing index found at height %d — skipping FastSync, resuming daemon scan", lastHeight)
 		} else {
-			// Fresh DB — run FastSync for initial bootstrap.
 			log.Println("TELA discovery: FastSync starting...")
 			if err := activeIndexer.FastSync(false); err != nil {
 				log.Printf("FastSync error: %v", err)
 			} else {
 				log.Println("TELA discovery: FastSync complete, probeTELA running in background")
-				// Save the freshly-discovered app catalog so the next startup
-				// has immediate data without waiting for a new sync.
 				sm.saveAppCache()
 			}
 		}
@@ -159,41 +299,10 @@ func (sm *SyncManager) StartSync(node string) {
 	chainHeight := activeIndexer.ChainHeight.Load()
 	log.Printf("HyperGnomon started: chain=%d indexed=%d", chainHeight, lastHeight)
 
-	{
-		sm.APIServer = hgapi.NewServer(
-			activeIndexer.Store,
-			activeIndexer.RPCPool,
-			fmt.Sprintf("127.0.0.1:%d", sm.gnomonPort),
-			&activeIndexer.SafeHeight,
-			nil,
-			activeIndexer,
-			0,
-		)
-		go func() {
-			if err := sm.APIServer.Start(); err != nil {
-				log.Printf("HyperGnomon API server exited: %v", err)
-			}
-		}()
-		log.Printf("HyperGnomon API listening on :%d", sm.gnomonPort)
-	}
-
-	// Start Gnomon-compatible WebSocket JSON-RPC server. TELA apps in the
-	// browser fall back to this when XSWD (the wallet bridge) does not
-	// expose DERO.GetSC. The standard Gnomon WS port is 40403.
-	// Also serves /xswd for apps that speak the XSWD wallet-bridge protocol.
-	{
-		wsAddr := fmt.Sprintf("127.0.0.1:%d", sm.gnomonWSPort)
-		daemonURL := node // reuse the same node the indexer connects to
-		sm.GnomonWS = NewGnomonWSServer(wsAddr, activeIndexer.Store, daemonURL, activeIndexer)
-		go func() {
-			if err := sm.GnomonWS.Start(); err != nil {
-				log.Printf("Gnomon WS server exited: %v", err)
-			}
-		}()
-		log.Printf("Gnomon WS JSON-RPC listening on %s/ws", wsAddr)
-	}
-
+	// Progress ticker: child of the setup goroutine, in the wg.
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		known := sm.KnownSCIDs()
 		if len(known) > 0 {
 			filtered := sm.ValidatedSCIDCount()
@@ -265,18 +374,47 @@ func (sm *SyncManager) StartSync(node string) {
 }
 
 func (sm *SyncManager) StopSync() {
-	if sm.syncCancel != nil {
-		close(sm.syncCancel)
-		sm.syncCancel = nil
+	// Cancel and wait for all sync goroutines to exit.
+	sm.mu.Lock()
+	cancel := sm.syncCancel
+	sm.syncCancel = nil
+	done := sm.syncDone
+	ws := sm.GnomonWS
+	sm.GnomonWS = nil
+	api := sm.APIServer
+	sm.APIServer = nil
+	sm.mu.Unlock()
+
+	if cancel != nil {
+		close(cancel)
 	}
-	if sm.GnomonWS != nil {
-		sm.GnomonWS.Stop()
-		sm.GnomonWS = nil
+	// Stop the long-lived servers explicitly (they are NOT in the waitgroup).
+	if ws != nil {
+		ws.Stop()
 	}
+	if api != nil {
+		// Graceful drain with a 5s deadline (matches the upstream contract:
+		// Stop(ctx) returns ctx's error if forced). A clean stop returns nil,
+		// so an intentional disconnect does not log an "API server exited"
+		// error from Start().
+		ctx, cancelStop := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelStop()
+		if err := api.Stop(ctx); err != nil {
+			log.Printf("HyperGnomon API server stop: %v", err)
+		}
+	}
+	if done != nil {
+		<-done
+	}
+	// Persist the final discovery catalog before closing the store so the
+	// app-cache never trails the live DB after a session that found new SCIDs.
+	sm.saveAppCache()
 	sm.StopIndexer()
 }
 
 func (sm *SyncManager) StopIndexer() {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
 	if sm.Indexer != nil {
 		sm.Indexer.Close()
 		sm.Indexer = nil
@@ -351,64 +489,127 @@ func (sm *SyncManager) loadAppCache() []TelaAppInfo {
 	return apps
 }
 
+// mainStoreFile mirrors the unexported const in the hypergnomon storage
+// package (storage/bbolt.go) so offline reads open the same DB file.
+const mainStoreFile = "HYPERGNOMON.db"
+
+// discoverTelaAppsFromStore reads the TELA-INDEX-1 catalog directly from the
+// on-disk HyperGnomon bbolt store, opened read-only. Used while the node is
+// disconnected so the offline count always matches what the indexer persisted.
+func (sm *SyncManager) discoverTelaAppsFromStore() ([]TelaAppInfo, error) {
+	if sm.DBDir == "" {
+		return nil, fmt.Errorf("db dir not initialised")
+	}
+	dbPath := filepath.Join(sm.DBDir, mainStoreFile)
+	if _, err := os.Stat(dbPath); err != nil {
+		return nil, err
+	}
+	db, err := bolt.Open(dbPath, 0600, &bolt.Options{
+		ReadOnly: true,
+		Timeout:  3 * time.Second,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("open store read-only: %w", err)
+	}
+	defer db.Close()
+
+	store := &hgstorage.BboltStore{DB: db, Path: dbPath}
+	// True deploy heights live in the "installs" bucket (InstallRecord), NOT
+	// the class bucket whose height is the re-index height (identical for all
+	// apps, useless for "newest"). from=0,to=MaxInt64 gets every install, and
+	// buildTelaAppsFromInstalls keeps the highest-height record per SCID.
+	installs, err := store.GetInstallsInRange(0, int64(^uint64(0)>>1), 0)
+	if err != nil {
+		return nil, err
+	}
+
+	apps := buildTelaAppsFromInstalls(installs)
+	log.Printf("DiscoverTelaApps: %d apps from on-disk store (offline)", len(apps))
+	return apps, nil
+}
+
 func (sm *SyncManager) DiscoverTelaApps() []TelaAppInfo {
-	if sm.Indexer == nil {
-		// Indexer not ready yet — try the on-disk cache from a previous run.
+	idx := sm.indexerSnapshot()
+	if idx == nil {
+		// Indexer not running (disconnected or still starting) — read the
+		// catalog straight from the on-disk HyperGnomon store so the dashboard
+		// shows the full discovered set, not a stale JSON snapshot. The cache
+		// remains only as a fallback for a fresh install with no DB yet.
+		if apps, err := sm.discoverTelaAppsFromStore(); err == nil && len(apps) > 0 {
+			return apps
+		}
 		if cached := sm.loadAppCache(); cached != nil {
 			return cached
 		}
 		return nil
 	}
 
-	seen := make(map[string]bool)
-	var apps []TelaAppInfo
+	// Live path: read the "installs" bucket (true deploy heights) instead of
+	// the class bucket (re-index height, identical across all apps).
+	installs, err := idx.Store.GetInstallsInRange(0, int64(^uint64(0)>>1), 0)
+	if err != nil {
+		log.Printf("DiscoverTelaApps: GetInstallsInRange: %v", err)
+		return nil
+	}
+	apps := buildTelaAppsFromInstalls(installs)
 
-	for _, class := range []string{"TELA-INDEX-1"} {
-		installs, err := sm.Indexer.Store.GetClassInstalls(class, 0)
-		if err != nil {
-			log.Printf("DiscoverTelaApps: GetClassInstalls(%s): %v", class, err)
+	// Only log when the count actually changes, otherwise the 5s status poll
+	// and the sync ticker would spam identical lines every few seconds.
+	if int64(len(apps)) != sm.discoverLastCount.Load() {
+		sm.discoverLastCount.Store(int64(len(apps)))
+		log.Printf("DiscoverTelaApps: %d apps", len(apps))
+	}
+	return apps
+}
+
+// buildTelaAppsFromInstalls collapses install records to the highest-height
+// entry per SCID and maps them into the frontend TelaAppInfo shape. Every
+// contract classified as TELA-INDEX-1 (a TELA app entry point) is included —
+// the class bucket is the authoritative signal, and DURL/name naming is
+// unrestricted, so no URL-pattern filtering is applied.
+func buildTelaAppsFromInstalls(installs []hgstructures.ClassInstall) []TelaAppInfo {
+	latest := make(map[string]hgstructures.ClassInstall, len(installs))
+	for _, inst := range installs {
+		if inst.Meta == nil || inst.Meta.Class != "TELA-INDEX-1" {
 			continue
 		}
-		for _, inst := range installs {
-			if seen[inst.SCID] {
-				continue
-			}
-			seen[inst.SCID] = true
-			durl := inst.SCID
-			name := inst.SCID
-			desc := ""
-			icon := ""
-			installH := inst.InstallHeight
-			if meta := inst.Meta; meta != nil {
-				if meta.DURL != "" {
-					durl = meta.DURL
-				}
-				if meta.Name != "" {
-					name = meta.Name
-				}
-				desc = meta.Desc
-				icon = meta.IconURL
-			}
-			apps = append(apps, TelaAppInfo{
-				SCID: inst.SCID, DURL: durl, Name: name,
-				DescrHdr: desc, IconURL: icon,
-				InstallHeight: installH, FromAPI: true,
-			})
+		if prev, ok := latest[inst.SCID]; !ok || inst.InstallHeight > prev.InstallHeight {
+			latest[inst.SCID] = inst
 		}
 	}
-	classBucketCount := len(apps)
-
-	log.Printf("DiscoverTelaApps: %d apps (%d from class bucket)", len(apps), classBucketCount)
+	apps := make([]TelaAppInfo, 0, len(latest))
+	for _, inst := range latest {
+		durl := inst.SCID
+		name := inst.SCID
+		desc := ""
+		icon := ""
+		if meta := inst.Meta; meta != nil {
+			if meta.DURL != "" {
+				durl = meta.DURL
+			}
+			if meta.Name != "" {
+				name = meta.Name
+			}
+			desc = meta.Desc
+			icon = meta.IconURL
+		}
+		apps = append(apps, TelaAppInfo{
+			SCID: inst.SCID, DURL: durl, Name: name,
+			DescrHdr: desc, IconURL: icon,
+			InstallHeight: inst.InstallHeight, FromAPI: true,
+		})
+	}
 	return apps
 }
 
 func (sm *SyncManager) ValidatedSCIDCount() int {
-	if sm.Indexer == nil {
+	idx := sm.indexerSnapshot()
+	if idx == nil {
 		return 0
 	}
 	n := 0
 	for _, class := range []string{"TELA-INDEX-1"} {
-		installs, err := sm.Indexer.Store.GetClassInstalls(class, 0)
+		installs, err := idx.Store.GetClassInstalls(class, 0)
 		if err == nil {
 			n += len(installs)
 		}
@@ -417,13 +618,14 @@ func (sm *SyncManager) ValidatedSCIDCount() int {
 }
 
 func (sm *SyncManager) KnownSCIDs() []string {
-	if sm.Indexer == nil {
+	idx := sm.indexerSnapshot()
+	if idx == nil {
 		return nil
 	}
 
 	seen := make(map[string]bool)
 	for _, class := range []string{"TELA-INDEX-1"} {
-		installs, err := sm.Indexer.Store.GetClassInstalls(class, 0)
+		installs, err := idx.Store.GetClassInstalls(class, 0)
 		if err != nil {
 			log.Printf("KnownSCIDs: GetClassInstalls(%s): %v", class, err)
 			continue
@@ -441,10 +643,11 @@ func (sm *SyncManager) KnownSCIDs() []string {
 
 func (sm *SyncManager) IndexSCIDNow(scid string) {
 	scid = strings.TrimSpace(scid)
-	if sm.Indexer == nil || len(scid) != 64 {
+	idx := sm.indexerSnapshot()
+	if idx == nil || len(scid) != 64 {
 		return
 	}
-	if _, err := sm.Indexer.IndexSingleSCID(scid, false, false); err != nil {
+	if _, err := idx.IndexSingleSCID(scid, false, false); err != nil {
 		log.Printf("IndexSCIDNow: %v", err)
 		return
 	}
@@ -467,6 +670,9 @@ func (sm *SyncManager) watchDaemonHealth(node string, cancel chan struct{}) {
 
 			if currentStatus != lastKnownStatus {
 				lastKnownStatus = currentStatus
+				if sm.OnHealthChange != nil {
+					sm.OnHealthChange(currentStatus)
+				}
 				if !currentStatus {
 					log.Printf("HealthWatch: daemon unreachable at %s", node)
 					if sm.sendEvent != nil {

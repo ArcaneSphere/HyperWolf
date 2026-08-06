@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -26,6 +27,10 @@ import (
 
 //go:embed web/*
 var webFS embed.FS
+
+// Version is the HyperWolf application version.
+// Updated automatically during release; do not edit manually.
+const Version = "0.8.5"
 
 var (
 	dashboardPort = flag.Int("dashboard-port", 18080, "dashboard HTTP server port")
@@ -66,17 +71,32 @@ func main() {
 
 	appState := state.New()
 	hub := router.NewHub()
+	logSvc := router.NewLogService()
+
+	// Stream log entries to dashboard clients over the WebSocket hub so the
+	// Terminal Logs page updates live without polling or manual refresh.
+	logCh, logUnsub := logSvc.Subscribe()
+	go func() {
+		defer logUnsub()
+		for entries := range logCh {
+			for _, entry := range entries {
+				hub.Send(map[string]any{"event": "log_entry", "entry": entry})
+			}
+		}
+	}()
 
 	syncMgr := indexer.NewSyncManager(*gnomonPort, *gnomonWSPort, func(msg map[string]any) {
 		hub.Send(msg)
 	})
+	// Mirror passive daemon connectivity loss/recovery to the tray icon.
+	syncMgr.OnHealthChange = tray.SetConnected
 
 	if err := syncMgr.InitStorage(); err != nil {
 		log.Fatalf("Failed to init storage: %v", err)
 	}
 	defer syncMgr.CloseStorage()
 
-	setupLogging(syncMgr.DBDir)
+	setupLogging(syncMgr.DBDir, logSvc)
 
 	hyperwolfDir := filepath.Dir(syncMgr.DBDir)
 	if err := tela.SetShardPath(hyperwolfDir); err != nil {
@@ -99,6 +119,7 @@ func main() {
 		GnomonPort:  *gnomonPort,
 		OnConnected: tray.SetConnected,
 		ShutdownCh:  shutdownCh,
+		LogService:  logSvc,
 	}
 
 	addr := fmt.Sprintf("127.0.0.1:%d", *dashboardPort)
@@ -107,12 +128,14 @@ func main() {
 	// Start HTTP server in background
 	go func() {
 		log.Printf("HyperWolf dashboard: http://%s/", addr)
+		logSvc.Add(router.LogLevelInfo, "HyperWolf dashboard started on "+addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("HTTP server: %v", err)
 		}
 	}()
 
 	fmt.Printf("\n  HyperWolf started — open http://%s/ in your browser\n\n", addr)
+	logSvc.Add(router.LogLevelInfo, "HyperWolf started — dashboard at http://"+addr+"/")
 
 	// Wire tray callbacks
 	startNode := func() {
@@ -128,14 +151,17 @@ func main() {
 		}
 		appState.SetNode(node)
 		telaProxy.Start()
+		logSvc.Add(router.LogLevelInfo, "Starting TELA proxy")
 		time.Sleep(100 * time.Millisecond)
 		go syncMgr.StartSync(node)
+		logSvc.Add(router.LogLevelSuccess, "Connected to node: "+node)
 	}
 
 	stopNode := func() {
 		syncMgr.StopSync()
 		telaProxy.Reset()
 		appState.ClearNode()
+		logSvc.Add(router.LogLevelWarn, "Node disconnected")
 	}
 
 	quitFn := func() {
@@ -155,9 +181,11 @@ func main() {
 		select {
 		case <-sigCh:
 			log.Println("Shutting down from signal...")
+			logSvc.Add(router.LogLevelWarn, "Received shutdown signal")
 		case <-shutdownCh:
 		}
 		telaProxy.Shutdown()
+		logSvc.Add(router.LogLevelInfo, "Shutting down...")
 		tray.Stop()
 	}()
 
@@ -202,7 +230,32 @@ func readOpenDashboardOnStart(hyperwolfDir string) bool {
 	return *cfg.Settings.OpenDashboardOnStart
 }
 
-func setupLogging(dbDir string) {
+// logBridge pipes every line written through the standard Go logger into the
+// LogService (so the Terminal Logs page shows the app's full log stream) while
+// still writing the original line to the configured log file.
+type logBridge struct {
+	svc *router.LogService
+	w   io.Writer
+}
+
+func (b *logBridge) Write(p []byte) (int, error) {
+	line := strings.TrimSpace(string(p))
+	if line != "" {
+		// Strip the standard Go logger prefix (e.g. "2026/02/08 01:42:22 ")
+		// since the LogEntry carries its own timestamp. Use SplitN instead
+		// of hardcoded character positions so this works across Go versions
+		// and custom log flag configurations.
+		if parts := strings.SplitN(line, " ", 3); len(parts) == 3 {
+			line = parts[2]
+		}
+		if line != "" {
+			b.svc.AddMessage(line)
+		}
+	}
+	return b.w.Write(p)
+}
+
+func setupLogging(dbDir string, logSvc *router.LogService) {
 	if *logFile == "" {
 		*logFile = filepath.Join(filepath.Dir(dbDir), "hyperwolf.log")
 	}
@@ -215,6 +268,6 @@ func setupLogging(dbDir string) {
 		log.Printf("Warning: cannot open log file %s: %v", *logFile, err)
 		return
 	}
-	log.SetOutput(f)
+	log.SetOutput(&logBridge{svc: logSvc, w: f})
 	log.Printf("HyperWolf started, logging to %s", *logFile)
 }

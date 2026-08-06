@@ -55,7 +55,21 @@ func NewGnomonWSServer(addr string, store hgstorage.Storage, daemonURL string, i
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  4096,
 			WriteBufferSize: 4096,
-			CheckOrigin:     func(r *http.Request) bool { return true },
+			CheckOrigin: func(r *http.Request) bool {
+				// Only allow connections originating from the local dashboard
+				// or TELA proxy (both loopback). This blocks cross-origin
+				// WebSocket hijacking from arbitrary websites in a browser,
+				// which would otherwise be able to read the indexed catalog
+				// via ws://127.0.0.1:<port>/xswd.
+				origin := r.Header.Get("Origin")
+				if origin == "" {
+					return true
+				}
+				return strings.HasPrefix(origin, "http://127.0.0.1") ||
+					strings.HasPrefix(origin, "http://localhost") ||
+					strings.HasPrefix(origin, "ws://127.0.0.1") ||
+					strings.HasPrefix(origin, "ws://localhost")
+			},
 		},
 		httpClient: &http.Client{Timeout: 15 * time.Second},
 	}
@@ -748,10 +762,10 @@ type daemonGetSCResult struct {
 
 // daemonRPCWrapper wraps a daemon JSON-RPC response.
 type daemonRPCWrapper struct {
-	JSONRPC string            `json:"jsonrpc"`
-	ID      json.RawMessage   `json:"id"`
+	JSONRPC string             `json:"jsonrpc"`
+	ID      json.RawMessage    `json:"id"`
 	Result  *daemonGetSCResult `json:"result,omitempty"`
-	Error   *rpcErrorObj      `json:"error,omitempty"`
+	Error   *rpcErrorObj       `json:"error,omitempty"`
 }
 
 // callDaemonGetSC calls the daemon's DERO.GetSC method via HTTP and returns
@@ -1262,15 +1276,15 @@ func (s *GnomonWSServer) handleValidateSC(id json.RawMessage, params json.RawMes
 		return jsonRPCResponse{ID: id, JSONRPC: "2.0", Result: map[string]interface{}{"scid": p.SCID, "found": false}}
 	}
 	return jsonRPCResponse{ID: id, JSONRPC: "2.0", Result: map[string]interface{}{
-		"scid":            p.SCID,
-		"found":           true,
-		"class":           meta.Class,
-		"tags":            meta.Tags,
-		"name":            meta.Name,
-		"description":     meta.Desc,
-		"durl":            meta.DURL,
-		"install_height":  meta.InstallHeight,
-		"last_height":     meta.LastHeight,
+		"scid":           p.SCID,
+		"found":          true,
+		"class":          meta.Class,
+		"tags":           meta.Tags,
+		"name":           meta.Name,
+		"description":    meta.Desc,
+		"durl":           meta.DURL,
+		"install_height": meta.InstallHeight,
+		"last_height":    meta.LastHeight,
 	}}
 }
 

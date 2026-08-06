@@ -29,8 +29,7 @@ This project and everyone participating in it is governed by our [Code of Conduc
 ## Getting Started
 
 - **GitHub Issues** — The primary place for bug reports, feature requests, and discussions.
-- **DOCS.md** — Start here for the full architecture and API reference.
-- **README.md** — Quick start and usage guide.
+- **README.md** — Quick start, usage guide, and API overview.
 
 ---
 
@@ -65,7 +64,7 @@ Use the [Feature Request template](ISSUE_TEMPLATE/feature_request.md).
 1. **Fork the repository** and create your branch from `main`.
 2. **Run tests** — Make sure existing tests pass (`go test ./...`).
 3. **Add tests** — For new features or bug fixes, include tests.
-4. **Update documentation** — If you change the API or add features, update `DOCS.md` and/or the README.
+4. **Update documentation** — If you change the API or add features, update the README.
 5. **Format your code** — Run `go fmt ./...` before committing.
 6. **Write a good commit message** — See the [style guide](#commit-messages) below.
 7. **Open a pull request** — Fill out the [PR template](PULL_REQUEST_TEMPLATE.md).
@@ -147,7 +146,6 @@ hyperwolf/
 ├── tray/                    # System tray implementation
 ├── web/                     # Frontend (SPA shell, JS, CSS)
 ├── assets/                  # Screenshots and project assets
-└── DOCS.md                  # Technical documentation
 ```
 
 ---

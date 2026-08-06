@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>HyperWolf</title>
   <link rel="icon" type="image/png" sizes="48x48" href="icons/hyperwolf-48x48.png">
   <link rel="icon" type="image/png" sizes="96x96" href="icons/hyperwolf-96x96.png">
@@ -32,23 +33,39 @@
     </div>
   </div>
 
+  <div id="onboarding-popover" class="popover hidden">
+    <div class="popover-content onboarding-content">
+      <div class="popover-title" id="onboarding-popover-title">👋 Welcome to HyperWolf</div>
+      <p class="onboarding-desc">Choose a node to connect to. Your choice becomes your default node and can be changed anytime in Settings.</p>
+      <div class="onboarding-nodes" id="onboarding-node-list"></div>
+      <input id="onboarding-node-input" type="text" placeholder="Or enter your own node address (e.g. 127.0.0.1:10102)" spellcheck="false" autocomplete="off">
+      <div class="popover-actions">
+        <button id="onboarding-skip" class="secondary">Skip</button>
+        <button id="onboarding-connect">Connect</button>
+      </div>
+    </div>
+  </div>
+
   <div id="sidebar-backdrop"></div>
+
+  <button id="menu-toggle" title="Menu">☰</button>
+  <div id="status" class="status-box"></div>
 
   <div id="sidebar">
     <div id="sidebar-header">
       <img id="sidebar-logo" src="icons/hyperwolf-96x96.png" alt="HyperWolf logo" />
       <span class="sidebar-title">HyperWolf</span>
-      <button id="sidebar-close" title="Close menu">✕</button>
     </div>
 
     <div id="sidebar-nav">
-      <div class="nav-item active" data-page="server">
+      <div class="nav-item" data-page="server">
         <span class="nav-icon">🖥️</span>
         <span class="nav-text">Node Status</span>
       </div>
-      <div class="nav-item" data-page="search">
+      <div class="nav-item active" data-page="search">
         <span class="nav-icon">🔍</span>
         <span class="nav-text">Search</span>
+        <span class="nav-badge" id="search-new-badge"></span>
       </div>
       <div class="nav-item" data-page="bookmarks">
         <span class="nav-icon">⭐</span>
@@ -58,6 +75,10 @@
       <div class="nav-item" data-page="settings">
         <span class="nav-icon">⚙️</span>
         <span class="nav-text">Settings</span>
+      </div>
+      <div class="nav-item" data-page="logs">
+        <span class="nav-icon">📋</span>
+        <span class="nav-text">Activity Log</span>
       </div>
       <div class="nav-item" data-page="help">
         <span class="nav-icon">❓</span>
@@ -102,7 +123,6 @@
 
   <div id="main">
     <div id="header">
-      <button id="menu-toggle" title="Menu">☰</button>
       <div class="input-row top-input">
         <div class="input-wrapper">
           <input id="node" placeholder="Node address (e.g. 127.0.0.1:10102)">
@@ -118,8 +138,6 @@
         </div>
         <button id="load" class="load-btn">🚀 Load SCID</button>
       </div>
-
-      <div id="status" class="status-box"></div>
 
       <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
         <div class="theme-toggle-slider">
@@ -142,7 +160,7 @@
     </div>
 
      <div id="content">
-        <div id="page-server" class="page active">
+        <div id="page-server" class="page">
           <h2>Node Status</h2>
 
           <div class="status-grid">
@@ -219,7 +237,7 @@
           <p>Servers are started automatically once a node is connected.</p>
         </div>
 
-      <div id="page-search" class="page">
+      <div id="page-search" class="page active">
           <h2>Search</h2>
           <div class="search-sticky">
             <div class="input-row">
@@ -266,7 +284,79 @@
             </div>
           </div>
         <div id="results">
-          <div class="no-results">Enter a search query to begin</div>
+        </div>
+        <div id="search-cards" class="search-cards">
+          <div class="search-card latest-finds" id="latest-finds">
+            <div class="search-card-header">
+              <span>Latest Finds</span>
+              <span id="latest-finds-new" class="latest-finds-new hidden"></span>
+            </div>
+            <div id="latest-finds-list" class="search-card-body"></div>
+          </div>
+          <div class="search-card live-info" id="live-info-card">
+            <div class="search-card-header">
+              <span>📢 Updates & News</span>
+              <button id="live-info-refresh" class="icon-btn" title="Refresh" aria-label="Refresh updates and news">⟳</button>
+            </div>
+            <div class="search-card-body live-info-body">
+              <!-- Update Available Banner (shown conditionally) -->
+              <div id="update-banner" class="update-banner hidden">
+                <div class="update-banner-content">
+                  <span class="update-icon">🎉</span>
+                  <div class="update-text">
+                    <strong>HyperWolf <span id="update-latest-version"></span> is available!</strong>
+                    <span>You're on <span id="update-current-version"></span></span>
+                  </div>
+                </div>
+                <div class="update-banner-actions">
+                  <button id="update-view-btn" class="small">Release Notes</button>
+                  <button id="update-dismiss-btn" class="small secondary">Dismiss</button>
+                </div>
+              </div>
+              
+              <!-- No Update Message (shown when current) -->
+              <div id="update-current-message" class="update-current-message hidden">
+                <span class="update-icon">✅</span>
+                <span>You're on the latest version (<span id="current-version-display"></span>)</span>
+              </div>
+              
+              <!-- RSS Feed Section -->
+              <div class="rss-feed-section">
+                <div class="rss-feed-header">
+                  <span class="rss-feed-title" id="rss-feed-title">📰 Dero.World AnotherWorld</span>
+                  <span class="rss-feed-updated" id="rss-feed-updated"></span>
+                </div>
+                <div class="rss-feed-list" id="rss-feed-list">
+                  <div class="rss-loading">Loading feed...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="search-card search-card-status" id="search-status-card">
+            <div class="search-card-header">Node Status</div>
+            <div class="search-card-body search-card-status-body">
+              <div class="sc-status-row">
+                <span class="sc-status-label">TELA Apps</span>
+                <span class="sc-status-value" id="sc-tela-count">—</span>
+              </div>
+              <div class="sc-status-row">
+                <span class="sc-status-label">Node</span>
+                <span class="sc-status-value" id="sc-node-status">—</span>
+              </div>
+              <div class="sc-status-row">
+                <span class="sc-status-label">TELA</span>
+                <span class="sc-status-value" id="sc-tela-status">—</span>
+              </div>
+              <div class="sc-status-row">
+                <span class="sc-status-label">Gnomon</span>
+                <span class="sc-status-value" id="sc-gnomon-status">—</span>
+              </div>
+              <div class="sc-status-row">
+                <span class="sc-status-label">Web Socket</span>
+                <span class="sc-status-value" id="sc-xswd-status">—</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -289,7 +379,12 @@
           <h3 class="setting-section-title">Connection</h3>
           <div class="setting-item">
             <div class="setting-label">Default Node</div>
-            <input type="text" id="setting-default-node" placeholder="e.g. 127.0.0.1:10102" spellcheck="false">
+            <div class="input-row">
+              <div class="input-wrapper">
+                <input type="text" id="setting-default-node" placeholder="e.g. 127.0.0.1:10102" spellcheck="false">
+                <button id="bookmark-setting-node" class="icon" title="Bookmark this node">☆</button>
+              </div>
+            </div>
             <div class="setting-description">Auto-connected when the app starts</div>
           </div>
           <div class="setting-item">
@@ -316,6 +411,18 @@
               </label>
             </div>
           </div>
+          <div class="setting-item">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Show Top Bar</div>
+                <div class="setting-description" style="margin-bottom: 0;">Show the node and SCID input fields in the header</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-show-topbar">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div class="setting-section">
@@ -333,12 +440,72 @@
             </div>
           </div>
           <div class="setting-item">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Show Search Cards</div>
+                <div class="setting-description" style="margin-bottom: 0;">Show bottom cards panel on the Search page</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-show-search-cards" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-item">
             <div class="setting-label">Hidden Extensions</div>
             <div class="tag-input" id="tag-input-container">
               <div class="tag-list" id="tag-list"></div>
               <input type="text" id="tag-input-field" placeholder="Type extension and press Enter" spellcheck="false">
             </div>
             <div class="setting-description">Extensions hidden from search results (e.g. .jpg, .js, .shards)</div>
+          </div>
+          
+          <!-- Live Info Card Settings -->
+          <div class="setting-section-title" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">Live Info Card</div>
+          <div class="setting-item">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Check for Updates</div>
+                <div class="setting-description" style="margin-bottom: 0;">Automatically check for HyperWolf updates on GitHub</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-check-updates" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label">RSS Feed URL</div>
+            <input type="url" id="setting-rss-feed-url" placeholder="https://dero.world/anotherworld/feed/" spellcheck="false">
+            <div class="setting-description">RSS/Atom feed to display in the Live Info card (default: Dero.World AnotherWorld feed)</div>
+          </div>
+        </div>
+
+        <div class="setting-section">
+          <h3 class="setting-section-title">Themes</h3>
+          <div class="setting-item">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Theme Mode</div>
+                <div class="setting-description" style="margin-bottom: 0;">Switch between dark and light theme</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-theme-toggle">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label">Background</div>
+            <select id="setting-search-gradient" style="width: 100%; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--input); color: var(--text); font-size: 13px; font-family: inherit; cursor: pointer;">
+              <option value="default">Default</option>
+              <option value="ocean">Deep Ocean</option>
+              <option value="sunset">Sunset</option>
+              <option value="aurora">Aurora</option>
+              <option value="indigo-rose">Indigo Rose</option>
+              <option value="instagram">Instagram</option>
+            </select>
+            <div class="setting-description">Gradient background for the Application</div>
           </div>
         </div>
 
@@ -351,31 +518,80 @@
         </div>
       </div>
 
+      <div id="page-logs" class="page">
+        <h2>Activity Log</h2>
+
+        <div class="log-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+          <div class="log-filter-group" style="display: flex; align-items: center; gap: 8px;">
+            <label for="log-level-filter" style="font-size: 13px; color: var(--text-secondary);">Filter by level:</label>
+            <select id="log-level-filter" style="padding: 6px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--input); color: var(--text); font-size: 13px;">
+              <option value="">All Levels</option>
+              <option value="INFO">Info</option>
+              <option value="WARN">Warning</option>
+              <option value="ERROR">Error</option>
+              <option value="SUCCESS">Success</option>
+            </select>
+          </div>
+
+          <div class="log-action-group" style="display: flex; gap: 8px;">
+            <button id="log-clear-btn" class="small secondary">🗑 Clear</button>
+            <button id="log-refresh-btn" class="small">↻ Refresh</button>
+          </div>
+        </div>
+
+        <div class="log-auto-scroll" style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px; font-size: 13px; color: var(--text-secondary);">
+          <input type="checkbox" id="log-auto-scroll" checked style="accent-color: var(--accent); width: 16px; height: 16px;">
+          <label for="log-auto-scroll" style="cursor: pointer;">Auto-follow latest</label>
+        </div>
+
+        <div id="log-container" class="log-container">
+          <div class="log-empty">Loading logs...</div>
+        </div>
+      </div>
+
     <div id="page-help" class="page">
       <h2>Help</h2>
 
       <div class="setting-section">
-        <h3 class="setting-section-title">ℹ️ About HyperWolf</h3>
+        <h3 class="setting-section-title">🚀 Getting Started</h3>
         <div class="info-box">
           <p><strong>HyperWolf</strong> is a standalone desktop application for browsing TELA decentralized applications on the DERO blockchain.</p>
-          <p>It allows you to:</p>
+          <p><strong>First launch:</strong> you'll be asked to choose a node — pick one of the suggested nodes or enter your own. Your choice becomes your <em>default node</em>, which HyperWolf auto-connects to on every start (changeable anytime in <a href="#" class="nav-link" data-target="settings"><strong>Settings → Connection</strong></a>).</p>
+          <ol>
+            <li>Choose a node on first launch (or skip and set one later)</li>
+            <li>Wait for Gnomon sync — the Search page fills in as apps are discovered</li>
+            <li>Search for TELA apps or paste a SCID directly</li>
+            <li>Click an app to open it in your browser</li>
+          </ol>
+          <p>The app opens on the <strong>Search</strong> page. Node and daemon details live on the <a href="#" class="nav-link" data-target="server"><strong>Node Status</strong></a> page.</p>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h3 class="setting-section-title">🔍 Search</h3>
+        <div class="info-box">
+          <p>Search is the home page. It indexes TELA apps via HyperGnomon and lets you find SCIDs by name, URL, SCID or description.</p>
           <ul>
-            <li>Start and control the local TELA server</li>
-            <li>Serve TELA sites as real web pages</li>
-            <li>Search and resolve SCIDs via the indexer</li>
+            <li><strong>Search box</strong> — fuzzy-matches app name, URL (dURL), SCID and description; suggestions appear as you type.</li>
+            <li><strong>Min rating</strong> — slider to filter apps by community rating.</li>
+            <li><strong>Sort</strong> — Top Rated, Name A→Z / Z→A, Newest / Oldest SCID.</li>
+            <li><strong>All SCIDs</strong> — toggle to list every discovered SCID.</li>
+            <li><strong>Hidden extensions</strong> — exclude file types (e.g. .jpg, .js, .shards) in <a href="#" class="nav-link" data-target="settings"><strong>Settings → Search</strong></a>.</li>
+            <li><strong>Direct Load</strong> — when enabled, clicking a result loads the SCID in a new tab automatically.</li>
+          </ul>
+          <p><strong>Cards</strong> (bottom of the page; hideable in <a href="#" class="nav-link" data-target="settings"><strong>Settings</strong></a>):</p>
+          <ul>
+            <li><strong>Latest Finds</strong> — newest discovered apps, with ✨ markers for apps found since your last visit.</li>
+            <li><strong>Updates &amp; News</strong> — HyperWolf update banner plus the Dero.World AnotherWorld RSS feed.</li>
+            <li><strong>Node Status</strong> — at-a-glance server status.</li>
           </ul>
         </div>
       </div>
 
       <div class="setting-section">
-        <h3 class="setting-section-title">🛠 Usage</h3>
+        <h3 class="setting-section-title">⭐ Bookmarks</h3>
         <div class="info-box">
-          <ol>
-            <li>Enter a DERO node address and click <strong>Connect</strong></li>
-            <li>Wait for sync to complete</li>
-            <li>Search for TELA apps or paste a SCID directly</li>
-            <li>Click an app to open it in your browser</li>
-          </ol>
+          <p>Save nodes and SCIDs for quick access — click the ☆ buttons next to the node/SCID inputs or on search results, then give them a label. The suggested nodes from first launch are pre-bookmarked. Manage, rename or remove them on the <a href="#" class="nav-link" data-target="bookmarks"><strong>Bookmarks</strong></a> page.</p>
         </div>
       </div>
 
@@ -385,7 +601,33 @@
           <ul>
             <li>Use your <strong>own local node</strong> for best performance and reliability.</li>
             <li>Public nodes also work well — find them on the <a href="#" class="nav-link" data-target="bookmarks"><strong>Bookmarks</strong></a> page.</li>
+            <li>Set your preferred node and enable <strong>Auto-Connect</strong> in <a href="#" class="nav-link" data-target="settings"><strong>Settings → Connection</strong></a>.</li>
             <li>First Gnomon sync ~<strong>17 seconds</strong>, SCID loading <strong>3–15 seconds</strong> depending on app size.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h3 class="setting-section-title">⚙️ Settings</h3>
+        <div class="info-box">
+          <ul>
+            <li><strong>Connection</strong> — default node, auto-connect, open dashboard on startup, show top bar.</li>
+            <li><strong>Search</strong> — direct-load SCIDs, show/hide the cards panel, hidden extensions.</li>
+            <li><strong>Live Info Card</strong> — update checks and the RSS feed shown in the Updates &amp; News card.</li>
+            <li><strong>Themes</strong> — dark/light mode and the Search page gradient background.</li>
+            <li><strong>Data</strong> — reset all settings to their defaults.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h3 class="setting-section-title">📋 Activity Log</h3>
+        <div class="info-box">
+          <p>HyperWolf logs what it's doing — connections, sync, discovery and errors. On the <a href="#" class="nav-link" data-target="logs"><strong>Activity Log</strong></a> page you can:</p>
+          <ul>
+            <li>Filter by level (Info / Warning / Error / Success).</li>
+            <li>Auto-follow the latest entries as they stream in.</li>
+            <li>Clear the log, or refresh it manually.</li>
           </ul>
         </div>
       </div>
@@ -419,7 +661,7 @@
       <div class="setting-section">
         <h3 class="setting-section-title">ℹ️ About HyperWolf</h3>
         <div class="info-box">
-          <p><strong>Version:</strong> 0.8.4</p>
+          <p><strong>Version:</strong> 0.8.5</p>
           <p><strong>Description:</strong> Standalone desktop application to access TELA's decentralized applications and websites from the DERO blockchain.</p>
         </div>
       </div>

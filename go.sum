@@ -1,9 +1,9 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
+github.com/ArcaneSphere/HyperGnomon v0.0.0-20260804120232-2103b63e452d h1:AnG160Krm4xcmGracHKlkz69vX+223uKlO+3BLD06uM=
+github.com/ArcaneSphere/HyperGnomon v0.0.0-20260804120232-2103b63e452d/go.mod h1:IH9oteGc3V+afcFF7wORMTELGd8NMXR0rbz+uKdyJFU=
 github.com/Azylem/tela v0.0.0-20260321215354-202c8ca5ce79 h1:hwGM0G0dbFYHSn15Do8mf0nNHFwIWgcyT3nWx2Wj1ag=
 github.com/Azylem/tela v0.0.0-20260321215354-202c8ca5ce79/go.mod h1:J+maI4zPRe7zpSpTyHDopUg3eQRqCKffvBIRnOhipB8=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/Dirtybird99/HyperGnomon v1.1.0 h1:2MXgh7UBuxJgNIaxoipLgTquYJ318rPeD3KXWXEbUvQ=
-github.com/Dirtybird99/HyperGnomon v1.1.0/go.mod h1:IH9oteGc3V+afcFF7wORMTELGd8NMXR0rbz+uKdyJFU=
 github.com/OneOfOne/xxhash v1.2.2 h1:KMrpdQIwFcEqXDklaen+P1axHaj9BSKzvpUUfnHldSE=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/VictoriaMetrics/metrics v1.23.1 h1:/j8DzeJBxSpL2qSIdqnRFLvQQhbJyJbbEi22yMm7oL0=

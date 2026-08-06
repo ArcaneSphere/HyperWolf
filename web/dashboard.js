@@ -7,10 +7,10 @@
  */
 
 // ================= ELEMENTS =================
+const header = document.getElementById("header");
 const sidebar = document.getElementById("sidebar");
 const sidebarBackdrop = document.getElementById("sidebar-backdrop");
 const menuToggleBtn = document.getElementById("menu-toggle");
-const sidebarCloseBtn = document.getElementById("sidebar-close");
 const statusEl = document.getElementById("status");
 const navItems = document.querySelectorAll(".nav-item");
 const pages = document.querySelectorAll(".page");
@@ -27,6 +27,7 @@ const loadBtn = document.getElementById("load");
 
 const bookmarkScidBtn = document.getElementById("bookmark-scid");
 const bookmarkNodeBtn = document.getElementById("bookmark-node");
+const bookmarkSettingNodeBtn = document.getElementById("bookmark-setting-node");
 const bookmarkedScidsEl = document.getElementById("bookmarked-scids");
 const bookmarkedNodesEl = document.getElementById("bookmarked-nodes");
 const bookmarkPopover = document.getElementById("bookmark-popover");
@@ -40,7 +41,18 @@ const themeToggle = document.getElementById("theme-toggle");
 
 // ================= STATE =================
 let bookmarks = { scids: {}, nodes: {} };
-let settings = { defaultNode: "", autoConnect: true, directLoad: true, openDashboardOnStart: true, hiddenExtensions: "" };
+let settings = { 
+  defaultNode: "", 
+  autoConnect: true, 
+  directLoad: true, 
+  openDashboardOnStart: true, 
+  hiddenExtensions: "", 
+  showSearchCards: true, 
+  showTopBar: false, 
+  searchGradient: "default",
+  checkUpdates: true,
+  rssFeedUrl: "https://dero.world/anotherworld/feed/"
+};
 let appConfig = { gnomon_api_port: 18082, tela_port: 18081 };
 let wasConnected = false;
 let connectTime = null;
@@ -68,6 +80,19 @@ async function send(method, params = {}) {
 }
 
 window.getDirectLoadSetting = () => settings.directLoad !== false;
+window.getShowSearchCardsSetting = () => settings.showSearchCards !== false;
+window.getCheckUpdatesSetting = () => settings.checkUpdates !== false;
+window.getRSSFeedUrlSetting = () => settings.rssFeedUrl || "https://dero.world/anotherworld/feed/";
+
+// Expose bookmark helpers for search.js result rows
+window.isBookmarked = (scid) => !!bookmarks.scids[scid];
+window.toggleSearchBookmark = (scid) => {
+  if (bookmarks.scids[scid]) {
+    showBookmarkPopover("scid", scid, "remove");
+  } else {
+    showBookmarkPopover("scid", scid, "save");
+  }
+};
 
 window.getHiddenExtensions = () => {
   return (settings.hiddenExtensions || "")
@@ -80,12 +105,30 @@ window.getHiddenExtensions = () => {
 const savedTheme = localStorage.getItem("theme") || "dark";
 document.documentElement.setAttribute("data-theme", savedTheme);
 
-/** Toggles between light and dark theme, persisting to localStorage. */
+const settingThemeToggle = document.getElementById("setting-theme-toggle");
+
+function syncThemeUI(theme) {
+  if (settingThemeToggle) settingThemeToggle.checked = theme === "dark";
+}
+
+function setTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("theme", theme);
+  syncThemeUI(theme);
+}
+
+syncThemeUI(savedTheme);
+
 themeToggle.onclick = () => {
   const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
-  document.documentElement.setAttribute("data-theme", next);
-  localStorage.setItem("theme", next);
+  setTheme(next);
 };
+
+if (settingThemeToggle) {
+  settingThemeToggle.addEventListener("change", () => {
+    setTheme(settingThemeToggle.checked ? "dark" : "light");
+  });
+}
 
 // ================= NAV =================
 // ================= SIDEBAR OVERLAY =================
@@ -105,7 +148,6 @@ function toggleSidebar() {
 }
 
 if (menuToggleBtn) menuToggleBtn.onclick = toggleSidebar;
-if (sidebarCloseBtn) sidebarCloseBtn.onclick = closeSidebar;
 if (sidebarBackdrop) sidebarBackdrop.onclick = closeSidebar;
 
 document.addEventListener("keydown", (e) => {
@@ -235,6 +277,8 @@ function pushToast(state, message) {
   return toast;
 }
 
+window.pushToast = pushToast;
+
 /**
  * Dismisses a toast notification with a fade-out animation.
  * @param {HTMLElement} toast - The toast DOM element to remove
@@ -307,6 +351,30 @@ connectNodeBtn.onclick = async () => {
     connectNodeBtn.disabled = false;
   }
 };
+
+/**
+ * Loads a bookmarked node using the flow: disconnect the old node (if any),
+ * then connect to the target node. Previously the "Load" action only worked
+ * while disconnected — when a node was already active the connect click was
+ * skipped and the status poll fell back to the existing node.
+ * @param {string} node - The bookmarked node address to connect to
+ * @returns {Promise<void>}
+ */
+async function loadBookmarkedNode(node) {
+  const isConnected = connectNodeBtn.textContent === "Disconnect";
+  if (isConnected) {
+    // 1. Disconnect the old node first (backend stops sync + resets TELA proxy).
+    try { await send("disconnect_node"); } catch (e) {}
+    setNodeConnected(false);
+    updateStatusIndicators();
+    document.dispatchEvent(new CustomEvent("nodeDisconnected"));
+  }
+  // 2. Point the input at the bookmarked node and load it via the normal
+  // connect flow (button now reads "Connect", so click() connects).
+  nodeInput.value = node;
+  updateBookmarkButtons();
+  connectNodeBtn.click();
+}
 
 // ================= SCID LOADER =================
 function scidLoaderShow() {
@@ -391,6 +459,9 @@ async function updateStatusIndicators() {
         icon.replaceChildren(createDot(xswd ? "connected" : "error"));
         text.textContent = xswd ? "Allowed" : "Blocked";
       }
+      // Update search page status card
+      const scXswd = document.getElementById("sc-xswd-status");
+      if (scXswd) { scXswd.textContent = xswd ? "Allowed" : "Blocked"; scXswd.style.color = xswd ? "var(--success)" : "var(--danger)"; }
     }
     const hasNode = !!node && connected;
     setNodeConnected(hasNode, node);
@@ -429,6 +500,15 @@ async function updateStatusIndicators() {
     if (telaCountEl && tela_apps_count > 0) {
       telaCountEl.textContent = tela_apps_count.toLocaleString();
     }
+    // Update search page status card
+    const scTelaCount = document.getElementById("sc-tela-count");
+    if (scTelaCount) scTelaCount.textContent = tela_apps_count > 0 ? tela_apps_count.toLocaleString() + " discovered" : "—";
+    const scNodeStatus = document.getElementById("sc-node-status");
+    if (scNodeStatus) { scNodeStatus.textContent = node ? "Connected" : "Not connected"; scNodeStatus.style.color = node ? "var(--success)" : "var(--danger)"; }
+    const scTelaStatus = document.getElementById("sc-tela-status");
+    if (scTelaStatus) { scTelaStatus.textContent = tela ? "Running" : "Stopped"; scTelaStatus.style.color = tela ? "var(--success)" : "var(--danger)"; }
+    const scGnomonStatus = document.getElementById("sc-gnomon-status");
+    if (scGnomonStatus) { scGnomonStatus.textContent = gnomon ? "Running" : "Stopped"; scGnomonStatus.style.color = gnomon ? "var(--success)" : "var(--danger)"; }
   } catch (e) {
     console.warn("Status update failed:", e);
   }
@@ -491,6 +571,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initSettingsUI();
   autoConnect();
   connectWebSocket();
+  showOnboardingPopover();
 });
 
 // ================= DEFAULT BOOKMARKS =================
@@ -513,6 +594,7 @@ function saveBookmarks() {
   localStorage.setItem("tela_bookmarks", JSON.stringify(bookmarks));
   renderBookmarks();
   updateBookmarkButtons();
+  document.dispatchEvent(new CustomEvent("bookmarksChanged"));
 }
 
 function updateBookmarkButtons() {
@@ -524,6 +606,16 @@ function updateBookmarkButtons() {
   bookmarkScidBtn.classList.toggle("saved", scidSaved);
   bookmarkNodeBtn.textContent = nodeSaved ? "★" : "☆";
   bookmarkNodeBtn.classList.toggle("saved", nodeSaved);
+  updateSettingNodeBookmark();
+}
+
+function updateSettingNodeBookmark() {
+  if (!bookmarkSettingNodeBtn) return;
+  const defaultNode = document.getElementById("setting-default-node");
+  const val = defaultNode ? defaultNode.value.trim() : "";
+  const saved = !!bookmarks.nodes[val];
+  bookmarkSettingNodeBtn.textContent = saved ? "★" : "☆";
+  bookmarkSettingNodeBtn.classList.toggle("saved", saved);
 }
 
 scidInput.oninput = updateBookmarkButtons;
@@ -581,6 +673,18 @@ bookmarkNodeBtn.onclick = () => {
   showBookmarkPopover("node", node, "save");
 };
 
+if (bookmarkSettingNodeBtn) {
+  bookmarkSettingNodeBtn.onclick = () => {
+    const defaultNode = document.getElementById("setting-default-node");
+    const node = defaultNode ? defaultNode.value.trim() : "";
+    if (!node) return alert("Enter node first");
+    if (bookmarks.nodes[node]) { showBookmarkPopover("node", node, "remove"); return; }
+    showBookmarkPopover("node", node, "save");
+  };
+  const settingNodeInput = document.getElementById("setting-default-node");
+  if (settingNodeInput) settingNodeInput.addEventListener("input", updateSettingNodeBookmark);
+}
+
 bookmarkPopoverSave.onclick = () => {
   if (!bookmarkTarget) return;
   if (bookmarkTarget.mode === "remove") {
@@ -623,7 +727,7 @@ function renderBookmarks() {
   if (!nodes.length) bookmarkedNodesEl.appendChild(createNoResults("No bookmarked nodes"));
   else nodes.forEach(b => bookmarkedNodesEl.appendChild(createBookmarkItem(
     b.label, b.node,
-    () => { nodeInput.value = b.node; updateBookmarkButtons(); if (connectNodeBtn.textContent === "Connect") connectNodeBtn.click(); },
+    () => loadBookmarkedNode(b.node),
     () => { delete bookmarks.nodes[b.node]; saveBookmarks(); }
   )));
   if (!scids.length) bookmarkedScidsEl.appendChild(createNoResults("No bookmarked SCIDs"));
@@ -706,7 +810,12 @@ function saveSettings() {
         autoConnect: settings.autoConnect,
         directLoad: settings.directLoad,
         openDashboardOnStart: settings.openDashboardOnStart,
-        hiddenExtensions: settings.hiddenExtensions
+        hiddenExtensions: settings.hiddenExtensions,
+        showSearchCards: settings.showSearchCards,
+        showTopBar: settings.showTopBar,
+        searchGradient: settings.searchGradient,
+        checkUpdates: settings.checkUpdates,
+        rssFeedUrl: settings.rssFeedUrl
       }
     })
   }).catch(e => console.warn("Failed to save settings to server:", e));
@@ -741,7 +850,14 @@ async function loadSettings() {
   if (directLoadInput) directLoadInput.checked = settings.directLoad !== false;
   const autoConnectInput = document.getElementById("setting-auto-connect");
   if (autoConnectInput) autoConnectInput.checked = settings.autoConnect !== false;
+  const checkUpdatesInput = document.getElementById("setting-check-updates");
+  if (checkUpdatesInput) checkUpdatesInput.checked = settings.checkUpdates !== false;
+  const rssFeedUrlInput = document.getElementById("setting-rss-feed-url");
+  if (rssFeedUrlInput) rssFeedUrlInput.value = settings.rssFeedUrl || "https://dero.world/anotherworld/feed/";
   if (window.renderTags) window.renderTags();
+  updateSettingNodeBookmark();
+  applyTopBar();
+  applySearchGradient();
 }
 
 function initToggleSwitch(id, settingKey) {
@@ -802,10 +918,39 @@ function initTagInput() {
   window.renderTags();
 }
 
+function applyTopBar() {
+  const hidden = settings.showTopBar === false;
+  header.classList.toggle("header-hidden", hidden);
+}
+
+const gradientClasses = ["g-default", "g-ocean", "g-sunset", "g-aurora", "g-indigo-rose", "g-instagram"];
+
+function applySearchGradient() {
+  gradientClasses.forEach(c => document.body.classList.remove(c));
+  const gradient = settings.searchGradient || "default";
+  document.body.classList.add("g-" + gradient);
+}
+
 function initSettingsUI() {
   initToggleSwitch("setting-direct-load", "directLoad");
   initToggleSwitch("setting-auto-connect", "autoConnect");
   initToggleSwitch("setting-open-dashboard", "openDashboardOnStart");
+  initToggleSwitch("setting-show-search-cards", "showSearchCards");
+  initToggleSwitch("setting-show-topbar", "showTopBar");
+  initToggleSwitch("setting-check-updates", "checkUpdates");
+  const topbarToggle = document.getElementById("setting-show-topbar");
+  if (topbarToggle) topbarToggle.addEventListener("change", applyTopBar);
+
+  const gradientSelect = document.getElementById("setting-search-gradient");
+  if (gradientSelect) {
+    gradientSelect.value = settings.searchGradient || "default";
+    gradientSelect.addEventListener("change", () => {
+      settings.searchGradient = gradientSelect.value;
+      saveSettings();
+      applySearchGradient();
+      pushToast("connected", "Search background updated");
+    });
+  }
   const nodeInput = document.getElementById("setting-default-node");
   if (nodeInput) {
     nodeInput.addEventListener("change", () => {
@@ -814,12 +959,28 @@ function initSettingsUI() {
       pushToast("connected", "Setting saved");
     });
   }
+  
+  // RSS Feed URL setting
+  const rssFeedUrlInput = document.getElementById("setting-rss-feed-url");
+  if (rssFeedUrlInput) {
+    rssFeedUrlInput.value = settings.rssFeedUrl || "https://dero.world/anotherworld/feed/";
+    rssFeedUrlInput.addEventListener("change", () => {
+      settings.rssFeedUrl = rssFeedUrlInput.value.trim();
+      saveSettings();
+      // Notify search page to update
+      if (window.updateLiveInfoSettings) {
+        window.updateLiveInfoSettings({ rssFeedUrl: settings.rssFeedUrl });
+      }
+      pushToast("connected", "RSS feed URL updated");
+    });
+  }
+  
   initTagInput();
   const resetBtn = document.getElementById("reset-settings-btn");
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
       showConfirmPopover("Reset all settings?", "This will reset every setting to its original value.", () => {
-        settings = { defaultNode: "", autoConnect: true, directLoad: true, openDashboardOnStart: true, hiddenExtensions: "" };
+        settings = { defaultNode: "", autoConnect: true, directLoad: true, openDashboardOnStart: true, hiddenExtensions: "", showSearchCards: true, showTopBar: false, searchGradient: "default", checkUpdates: true, rssFeedUrl: "https://dero.world/anotherworld/feed/" };
         localStorage.removeItem("hyperwolf_settings");
         loadSettings();
         pushToast("connected", "Settings reset to defaults");
@@ -856,6 +1017,132 @@ document.getElementById("confirm-popover").addEventListener("click", (e) => {
     confirmCallback = null;
   }
 });
+
+// ================= ONBOARDING =================
+const onboardingPopover = document.getElementById("onboarding-popover");
+const onboardingNodeList = document.getElementById("onboarding-node-list");
+const onboardingNodeInput = document.getElementById("onboarding-node-input");
+const onboardingSkipBtn = document.getElementById("onboarding-skip");
+const onboardingConnectBtn = document.getElementById("onboarding-connect");
+let selectedOnboardingNode = "";
+
+/**
+ * A "fresh install" is a first run: the user has never saved settings,
+ * never picked a default node (local or server-side), and has not already
+ * dismissed the onboarding prompt.
+ * @returns {boolean}
+ */
+function isFreshInstall() {
+  if (localStorage.getItem("hyperwolf_onboarding_done")) return false;
+  if (localStorage.getItem("hyperwolf_settings")) return false;
+  if (settings.defaultNode) return false;
+  return true;
+}
+
+function renderOnboardingNodes() {
+  if (!onboardingNodeList) return;
+  onboardingNodeList.replaceChildren();
+  const nodes = bookmarks.nodes || {};
+  const entries = Object.entries(nodes);
+  if (!entries.length) {
+    const empty = document.createElement("div");
+    empty.className = "onboarding-empty";
+    empty.textContent = "No bookmarked nodes available — enter your own below.";
+    onboardingNodeList.appendChild(empty);
+    return;
+  }
+  entries.forEach(([addr, info]) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "onboarding-node-option";
+    btn.dataset.node = addr;
+    const label = document.createElement("span");
+    label.className = "onb-label";
+    label.textContent = (info && info.label) || "Node";
+    const host = document.createElement("span");
+    host.className = "onb-addr";
+    host.textContent = addr;
+    btn.append(label, host);
+    btn.addEventListener("click", () => {
+      onboardingNodeList.querySelectorAll(".onboarding-node-option").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      selectedOnboardingNode = addr;
+      if (onboardingNodeInput) onboardingNodeInput.value = "";
+    });
+    onboardingNodeList.appendChild(btn);
+  });
+}
+
+function showOnboardingPopover() {
+  if (!onboardingPopover || !isFreshInstall()) return;
+  renderOnboardingNodes();
+  selectedOnboardingNode = "";
+  if (onboardingNodeInput) onboardingNodeInput.value = "";
+  onboardingPopover.classList.remove("hidden");
+  setTimeout(() => { if (onboardingNodeInput) onboardingNodeInput.focus(); }, 50);
+}
+
+function hideOnboardingPopover() {
+  if (!onboardingPopover) return;
+  onboardingPopover.classList.add("hidden");
+}
+
+/**
+ * Applies the chosen node exactly like the Settings "Default Node" field:
+ * persists it (localStorage + server), keeps auto-connect on, then connects
+ * through the normal header connect flow.
+ * @param {string} node - Node address to set as default and connect to
+ * @returns {void}
+ */
+function completeOnboarding(node) {
+  localStorage.setItem("hyperwolf_onboarding_done", "1");
+  hideOnboardingPopover();
+  settings.defaultNode = node;
+  settings.autoConnect = true;
+  saveSettings();
+  const defaultNodeInput = document.getElementById("setting-default-node");
+  if (defaultNodeInput) defaultNodeInput.value = node;
+  nodeInput.value = node;
+  updateBookmarkButtons();
+  connectNodeBtn.click();
+}
+
+function skipOnboarding() {
+  localStorage.setItem("hyperwolf_onboarding_done", "1");
+  hideOnboardingPopover();
+  pushToast("warning", "Set a default node anytime in Settings");
+}
+
+if (onboardingConnectBtn) {
+  onboardingConnectBtn.addEventListener("click", () => {
+    const custom = onboardingNodeInput ? onboardingNodeInput.value.trim() : "";
+    const node = custom || selectedOnboardingNode;
+    if (!node) {
+      pushToast("warning", "Pick a node or enter one first");
+      return;
+    }
+    completeOnboarding(node);
+  });
+}
+if (onboardingSkipBtn) onboardingSkipBtn.addEventListener("click", skipOnboarding);
+if (onboardingPopover) {
+  onboardingPopover.addEventListener("click", (e) => {
+    if (e.target === onboardingPopover) skipOnboarding();
+  });
+}
+if (onboardingNodeInput) {
+  onboardingNodeInput.addEventListener("input", () => {
+    if (!onboardingNodeInput.value.trim()) return;
+    onboardingNodeList.querySelectorAll(".onboarding-node-option").forEach(b => b.classList.remove("selected"));
+    selectedOnboardingNode = "";
+  });
+  onboardingNodeInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (onboardingConnectBtn) onboardingConnectBtn.click();
+    }
+  });
+}
 
 function addCopyButtons() {
   document.querySelectorAll("pre").forEach(pre => {
@@ -971,6 +1258,17 @@ function resetSyncProgress() {
   if (svTelaCount) svTelaCount.textContent = "—";
   const svTelaStatus = document.getElementById("sv-tela-status");
   if (svTelaStatus) svTelaStatus.textContent = "—";
+  // Reset search page status card
+  const scTelaCount = document.getElementById("sc-tela-count");
+  if (scTelaCount) scTelaCount.textContent = "—";
+  const scNodeStatus = document.getElementById("sc-node-status");
+  if (scNodeStatus) { scNodeStatus.textContent = "—"; scNodeStatus.style.color = ""; }
+  const scTelaStatus = document.getElementById("sc-tela-status");
+  if (scTelaStatus) { scTelaStatus.textContent = "—"; scTelaStatus.style.color = ""; }
+  const scGnomonStatus = document.getElementById("sc-gnomon-status");
+  if (scGnomonStatus) { scGnomonStatus.textContent = "—"; scGnomonStatus.style.color = ""; }
+  const scXswdStatus = document.getElementById("sc-xswd-status");
+  if (scXswdStatus) { scXswdStatus.textContent = "—"; scXswdStatus.style.color = ""; }
 }
 
 // ================= WEBSOCKET =================
@@ -996,7 +1294,7 @@ function connectWebSocket() {
     }
   };
 
-  ws.onclose = () => {
+ws.onclose = () => {
     console.log("WebSocket disconnected, reconnecting in 3s");
     wsReconnectTimer = setTimeout(connectWebSocket, 3000);
   };
@@ -1007,11 +1305,184 @@ function connectWebSocket() {
   };
 }
 
+// =====================
+// LOGS PAGE
+// =====================
+
+let currentLogLevelFilter = "";
+
+/**
+ * Fetches logs from the server and renders them in the log container.
+ * @param {string} levelFilter - Optional level to filter by (INFO, WARN, ERROR, SUCCESS)
+ */
+async function refreshLogs(levelFilter = "") {
+  currentLogLevelFilter = levelFilter;
+  const logContainer = document.getElementById("log-container");
+  if (!logContainer) return;
+
+  try {
+    const params = new URLSearchParams();
+    if (levelFilter) params.set("level", levelFilter);
+
+    const res = await fetch("/api/logs" + (params.toString() ? "?" + params.toString() : ""));
+    const data = await res.json();
+
+    if (!data.ok || !data.result) {
+      logContainer.innerHTML = '<div class="log-empty">Failed to load logs</div>';
+      return;
+    }
+
+    const logs = data.result.logs || [];
+    if (!logs.length) {
+      logContainer.innerHTML = '<div class="log-empty">No logs to display</div>';
+      return;
+    }
+
+    // Render newest-first (latest at top) to match live WS appends, which
+    // prepend at the top of the list.
+    logs.reverse();
+
+    logContainer.innerHTML = logs.map(entry => createLogEntry(entry)).join("");
+    applyAutoScroll();
+  } catch (e) {
+    console.warn("Logs fetch error:", e);
+    logContainer.innerHTML = '<div class="log-empty">Error loading logs</div>';
+  }
+}
+
+/**
+ * Creates an HTML string for a single log entry.
+ * @param {Object} entry - Log entry object with timestamp, level, and message
+ * @returns {string} HTML string for the log entry
+ */
+function createLogEntry(entry) {
+  const timestamp = new Date(entry.timestamp).toLocaleString();
+  const level = entry.level || "INFO";
+  const message = escapeHtml(entry.message || "");
+
+  return `
+    <div class="log-entry">
+      <span class="log-timestamp">${timestamp}</span>
+      <span class="log-level ${level}">${level}</span>
+      <span class="log-message">${message}</span>
+    </div>
+  `;
+}
+
+/**
+ * Escapes HTML special characters to prevent XSS in log messages.
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text
+ */
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+/**
+ * Prepends a single log entry to the top of the log container as it arrives
+ * over the WebSocket. Honors the current level filter, replaces empty-state
+ * placeholders, caps the DOM size, and sticks to the top when the page is
+ * visible with auto-follow enabled.
+ * @param {Object} entry - Log entry object with timestamp, level, and message
+ * @returns {void}
+ */
+function appendLogEntry(entry) {
+  const logContainer = document.getElementById("log-container");
+  if (!logContainer) return;
+
+  // Respect the active level filter (empty = all levels).
+  if (currentLogLevelFilter && entry.level !== currentLogLevelFilter) return;
+
+  const empty = logContainer.querySelector(".log-empty");
+  if (empty) empty.remove();
+
+  const pageVisible = document.getElementById("page-logs")?.classList.contains("active");
+  const autoFollow = document.getElementById("log-auto-scroll");
+  const shouldStick = pageVisible && (!autoFollow || autoFollow.checked);
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = createLogEntry(entry).trim();
+  const row = wrapper.firstElementChild;
+  if (row) logContainer.prepend(row);
+
+  // Cap the number of rendered rows to avoid unbounded DOM growth
+  // (prune the oldest rows from the bottom).
+  const maxRows = 1000;
+  while (logContainer.children.length > maxRows) {
+    logContainer.lastChild.remove();
+  }
+
+  if (shouldStick) logContainer.scrollTop = 0;
+}
+
+/**
+ * Sticks the log view to the top (the latest entries) when auto-follow is on.
+ */
+function applyAutoScroll() {
+  const autoFollow = document.getElementById("log-auto-scroll");
+  const logContainer = document.getElementById("log-container");
+  if (autoFollow && autoFollow.checked && logContainer) {
+    logContainer.scrollTop = 0;
+  }
+}
+
+// Event listeners for log page controls
+document.addEventListener("DOMContentLoaded", () => {
+  const logLevelFilter = document.getElementById("log-level-filter");
+  const logRefreshBtn = document.getElementById("log-refresh-btn");
+  const logClearBtn = document.getElementById("log-clear-btn");
+  const logAutoScroll = document.getElementById("log-auto-scroll");
+  const logContainer = document.getElementById("log-container");
+
+  if (logLevelFilter) {
+    logLevelFilter.addEventListener("change", () => {
+      refreshLogs(logLevelFilter.value);
+    });
+  }
+
+  if (logRefreshBtn) {
+    logRefreshBtn.addEventListener("click", () => {
+      refreshLogs(currentLogLevelFilter);
+    });
+  }
+
+  if (logClearBtn) {
+    logClearBtn.addEventListener("click", () => {
+      if (!confirm("Clear all displayed logs from the browser? (This doesn't clear server-side logs.)")) return;
+      if (logContainer) {
+        logContainer.innerHTML = '<div class="log-empty">Logs cleared</div>';
+      }
+    });
+  }
+
+  // Stop auto-follow when user manually scrolls away from the top
+  // (latest entries live at the top).
+  if (logContainer && logAutoScroll) {
+    logContainer.addEventListener("scroll", () => {
+      // If user scrolls down away from the newest entries, disable auto-follow
+      if (logContainer.scrollTop > 10) {
+        logAutoScroll.checked = false;
+      }
+    });
+  }
+
+  // Load logs when the logs page becomes visible
+  document.addEventListener("pageChanged", (e) => {
+    if (e.detail.page === "logs") {
+      refreshLogs(currentLogLevelFilter);
+    }
+  });
+});
+
 function handleEvent(msg) {
   // Dispatch to any listeners (search.js etc.)
   document.dispatchEvent(new CustomEvent("wsEvent", { detail: msg }));
 
-  if (msg.event === "sync_progress") {
+  if (msg.event === "log_entry" && msg.entry) {
+    appendLogEntry(msg.entry);
+  } else if (msg.event === "sync_progress") {
     updateSyncProgress(msg.indexed, msg.chain);
   } else if (msg.event === "tip_synced") {
     markTipSynced();

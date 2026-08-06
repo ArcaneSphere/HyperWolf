@@ -8,6 +8,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/hypergnomon/hypergnomon v1.1.0
 	github.com/sirupsen/logrus v1.9.3
+	go.etcd.io/bbolt v1.3.7
 )
 
 require (
@@ -41,7 +42,6 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	go.etcd.io/bbolt v1.3.7 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.27.1 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
@@ -56,4 +56,4 @@ replace github.com/deroproject/derohe => github.com/civilware/derohe v0.0.0-2024
 
 replace github.com/civilware/tela => github.com/Azylem/tela v0.0.0-20260321215354-202c8ca5ce79
 
-replace github.com/hypergnomon/hypergnomon => github.com/Dirtybird99/HyperGnomon v1.1.0
+replace github.com/hypergnomon/hypergnomon => github.com/ArcaneSphere/HyperGnomon v0.0.0-20260804120232-2103b63e452d

@@ -11,8 +11,23 @@
   const loadBtn      = document.getElementById("load");
   const searchClear  = document.getElementById("searchClear");
   const showAllToggle = document.getElementById("showAllToggle");
+  const searchCardsEl = document.getElementById("search-cards");
 
   if (!searchBox || !resultsEl) return;
+
+  // Move suggestions dropdown outside #content to body so it's never clipped
+  const searchSuggestions = document.getElementById("searchSuggestions");
+  if (searchSuggestions) {
+    document.body.appendChild(searchSuggestions);
+  }
+
+  function positionDropdown() {
+    if (!searchSuggestions || searchSuggestions.classList.contains("hidden")) return;
+    const rect = searchBox.getBoundingClientRect();
+    searchSuggestions.style.top = (rect.bottom + 4) + "px";
+    searchSuggestions.style.left = rect.left + "px";
+    searchSuggestions.style.width = rect.width + "px";
+  }
 
   let apiBase = "http://127.0.0.1:18082/api";
 
@@ -32,14 +47,172 @@
   let showAllSCIDs = false;
   let loadToken  = 0;
   let resultsLoaded = false;
+  let fullLoadInProgress = false; // guards against catalog refresh racing a full load
+  let lastFullLoadCount = 0;      // catalog size at the last full ratings load
+  let catalogRefreshTimer = null; // throttle for lightweight catalog refreshes
   let metadataRetries = 0;
 
-  const searchSuggestions = document.getElementById("searchSuggestions");
+  // New-SCID detection: remembers the last-seen catalog so the user gets a
+  // "N new app(s) found" notification + latest-finds suggestions on open.
+  const SEEN_KEY = "hyperwolf.seenSCIDs";
+  const newBadgeEl = document.getElementById("search-new-badge");
+  const latestFindsEl = document.getElementById("latest-finds");
+  const latestFindsNewEl = document.getElementById("latest-finds-new");
+  const latestFindsListEl = document.getElementById("latest-finds-list");
+  const newSCIDs = new Set();       // scids discovered since the stored baseline
+  let baselineSeen = new Set();     // last known catalog (persisted)
+  let newNotified = false;          // avoid spamming toasts
+
+  function loadSeenBaseline() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(SEEN_KEY) || "[]");
+      baselineSeen = new Set(Array.isArray(raw) ? raw : []);
+    } catch (e) {
+      baselineSeen = new Set();
+    }
+  }
+
+  function persistSeenBaseline() {
+    try {
+      localStorage.setItem(SEEN_KEY, JSON.stringify([...baselineSeen]));
+    } catch (e) {}
+  }
+
+  function setNewBadge(count) {
+    if (!newBadgeEl) return;
+    if (count > 0) {
+      newBadgeEl.textContent = count;
+      newBadgeEl.title = count + " new TELA app" + (count !== 1 ? "s" : "") + " found";
+    } else {
+      newBadgeEl.textContent = "";
+      newBadgeEl.title = "";
+    }
+  }
+
+  function showLatestFinds(apps) {
+    if (!latestFindsEl || !latestFindsListEl) return;
+    // Always render the card so the 3-card layout stays stable — even with no
+    // data yet. A placeholder replaces the list until apps are discovered.
+    latestFindsEl.classList.remove("hidden");
+    // "Latest" = newest DISCOVERED, not highest install height. In this DB all
+    // installs share one re-index height, so height alone is useless — order by
+    // (newly discovered first), then install height desc, then SCID.
+    // Filter to only entries with real names (not raw SCID or filenames)
+    const valid = apps.filter(a => {
+      const name = (a.name || "").trim();
+      const durl = (a.durl || "").trim();
+      if (!name || name === a.scid) return false;
+      if (durl && durl.endsWith(".js")) return false;
+      return true;
+    });
+    const newest = [...valid]
+      .sort((a, b) => {
+        const aNew = newSCIDs.has(a.scid) ? 1 : 0;
+        const bNew = newSCIDs.has(b.scid) ? 1 : 0;
+        if (aNew !== bNew) return bNew - aNew;
+        // Fall back to install height (highest = newest)
+        return (b.install_height || 0) - (a.install_height || 0);
+      })
+      .slice(0, 3);
+
+    if (!newest.length) {
+      latestFindsListEl.replaceChildren();
+      const empty = document.createElement("div");
+      empty.className = "latest-find-empty";
+      empty.textContent = waitingStatusText();
+      latestFindsListEl.appendChild(empty);
+      if (latestFindsNewEl) latestFindsNewEl.classList.add("hidden");
+      return;
+    }
+
+    latestFindsListEl.replaceChildren();
+    const isNew = (scid) => newSCIDs.has(scid);
+    const anyNew = newest.some(r => isNew(r.scid));
+    if (latestFindsNewEl) {
+      latestFindsNewEl.classList.toggle("hidden", !anyNew);
+      latestFindsNewEl.textContent = anyNew ? "✨ " + newest.filter(r => isNew(r.scid)).length + " new" : "";
+    }
+
+    newest.forEach(app => {
+      const row = document.createElement("div");
+      row.className = "latest-find-item";
+
+      const iconSlot = document.createElement("div");
+      iconSlot.className = "icon-slot";
+      if (app.iconURL) {
+        const img = document.createElement("img");
+        img.className = "icon";
+        img.src = app.iconURL;
+        img.onerror = () => iconSlot.replaceChildren(createHexIcon());
+        iconSlot.appendChild(img);
+      } else {
+        iconSlot.appendChild(createHexIcon());
+      }
+
+      const content = document.createElement("div");
+      content.className = "content";
+      const urlEl = document.createElement("div");
+      urlEl.className = "url";
+      urlEl.textContent = app.durl || app.scid;
+      const nameEl = document.createElement("div");
+      nameEl.className = "nameHdr";
+      nameEl.textContent = app.name || app.scid;
+      const scidEl = document.createElement("div");
+      scidEl.className = "scid";
+      scidEl.textContent = app.scid;
+      content.append(urlEl, nameEl, scidEl);
+
+      const meta = document.createElement("div");
+      meta.className = "latest-find-meta";
+      if (isNew(app.scid)) {
+        const tag = document.createElement("span");
+        tag.className = "latest-find-tag";
+        tag.textContent = "NEW";
+        meta.appendChild(tag);
+      }
+      if (app.install_height > 0) {
+        const h = document.createElement("span");
+        h.textContent = "h" + app.install_height.toLocaleString();
+        meta.appendChild(h);
+      }
+
+      row.append(iconSlot, content, meta);
+      row.onclick = () => handleSCIDClick(app.scid);
+      latestFindsListEl.appendChild(row);
+    });
+
+    latestFindsEl.classList.remove("hidden");
+  }
+
+  function detectNewSCIDs(apps) {
+    loadSeenBaseline();
+    const current = new Set(apps.map(a => a.scid));
+    newSCIDs.clear();
+    // First run (empty baseline) just seeds — no false "new" spam.
+    if (baselineSeen.size > 0) {
+      for (const scid of current) {
+        if (!baselineSeen.has(scid)) newSCIDs.add(scid);
+      }
+    }
+    // Merge current into baseline and persist (old entries kept so re-finds
+    // after a DB wipe don't re-alert as "new").
+    for (const scid of current) baselineSeen.add(scid);
+    persistSeenBaseline();
+    setNewBadge(newSCIDs.size);
+    if (newSCIDs.size > 0 && !newNotified && typeof window.pushToast === "function") {
+      newNotified = true;
+      const n = newSCIDs.size;
+      window.pushToast("connected", `🎉 ${n} new TELA app${n !== 1 ? "s" : ""} found`);
+    }
+  }
+
+  function updateLatestFinds() {
+    const withHeight = allResults.map((r, i) => ({ scid: r.scid, durl: r.dURL, name: r.nameHdr, descrHdr: r.descrHdr, iconURL: r.iconURL, install_height: r.createdHeight, _idx: i }));
+    showLatestFinds(withHeight);
+  }
 
   let suggestionResults = [];
   let suggestionIndex = -1;
-
-  searchBox.parentElement.style.position = "relative";
 
   if (minRatingEl && minRatingVal) {
     minRatingEl.value        = minRating;
@@ -70,8 +243,15 @@
     }
   }
 
+  function waitingStatusText() {
+    const nodeStatus = document.getElementById("sc-node-status");
+    const connected = nodeStatus && /Connected/i.test(nodeStatus.textContent || "");
+    return connected ? "⏳ Waiting for sync…" : "No TELA apps discovered yet — connect a node";
+  }
+
   async function loadSearchSCIDs() {
     const token = ++loadToken;
+    fullLoadInProgress = true;
     resultsLoaded = false;
     try {
       statusEl.textContent = "⏳ Loading apps...";
@@ -208,6 +388,18 @@
         }
       }
       resultsLoaded = true;
+      lastFullLoadCount = allResults.length;
+
+      // Surface newly-found SCIDs since the last visit + refresh latest finds.
+      detectNewSCIDs(allResults.map(r => ({ scid: r.scid })));
+      updateLatestFinds();
+
+      // Honest status: an empty catalog usually means "still syncing", not done.
+      if (statusEl) {
+        statusEl.textContent = allResults.length > 0
+          ? `✅ Loaded ${allResults.length} apps`
+          : waitingStatusText();
+      }
     } catch (err) {
       if (token !== loadToken) return;
       console.error("Error loading SCIDs:", err);
@@ -217,7 +409,95 @@
       retry.textContent = "↻ Retry";
       retry.onclick = () => { retry.remove(); loadSearchSCIDs(); };
       statusEl.appendChild(retry);
+    } finally {
+      fullLoadInProgress = false;
     }
+  }
+
+  // Lightweight catalog refresh: re-reads the discovered app list (+ metadata)
+  // WITHOUT the per-app ratings fetch. Keeps the Search page live during first
+  // sync / live discovery so the user never has to refresh to see content.
+  async function refreshFromCatalog() {
+    if (fullLoadInProgress) return; // a full load is already doing this work
+    const token = ++loadToken;
+    try {
+      const disc = await fetch("/api/tela/discover");
+      if (token !== loadToken) return;
+      const data = await disc.json();
+      if (!data?.ok || !data?.result?.apps) return;
+      if (token !== loadToken) return;
+
+      const apps = data.result.apps;
+      const current = new Map(allResults.map(r => [r.scid, r]));
+
+      // Early exit: the catalog set is unchanged — nothing new to show.
+      if (resultsLoaded && apps.length === current.size && apps.every(a => current.has(a.scid))) {
+        return;
+      }
+
+      let metaMap = new Map();
+      try {
+        const resp = await fetch(`${apiBase}/tela`);
+        if (resp.ok) {
+          const md = await resp.json();
+          (md.tela_apps || []).forEach(a => metaMap.set(a.scid, a));
+        }
+      } catch (e) { /* metadata is optional */ }
+      if (token !== loadToken) return;
+
+      const merged = new Map();
+      apps.forEach(app => {
+        const prev = current.get(app.scid);
+        const meta = metaMap.get(app.scid);
+        const entry = prev ? { ...prev } : {
+          scid: app.scid, dURL: app.durl, nameHdr: app.name,
+          descrHdr: app.descrHdr || "", iconURL: app.iconURL || "",
+          likes: 0, dislikes: 0, average: 0,
+          createdHeight: app.install_height || 0,
+          ratingsLoaded: false, from_api: app.from_api
+        };
+        if (meta) {
+          entry.nameHdr = meta.name || entry.nameHdr;
+          entry.descrHdr = meta.description || entry.descrHdr;
+          entry.dURL = meta.durl || entry.dURL;
+          entry.from_api = true;
+        }
+        merged.set(app.scid, entry);
+      });
+      // Merge API-only entries that discovery may have missed.
+      metaMap.forEach((meta, scid) => {
+        if (merged.has(scid)) return;
+        merged.set(scid, {
+          scid, dURL: meta.durl || scid, nameHdr: meta.name || scid,
+          descrHdr: meta.description || "", iconURL: "",
+          likes: 0, dislikes: 0, average: 0,
+          createdHeight: meta.install_height || 0,
+          ratingsLoaded: false, from_api: true
+        });
+      });
+
+      if (token !== loadToken) return;
+      allResults = [...merged.values()];
+      fuse.setCollection(allResults);
+      refreshResults();
+      detectNewSCIDs(allResults.map(r => ({ scid: r.scid })));
+      updateLatestFinds();
+      if (statusEl) {
+        statusEl.textContent = allResults.length > 0
+          ? `✅ ${allResults.length} TELA app${allResults.length !== 1 ? "s" : ""}`
+          : waitingStatusText();
+      }
+    } catch (e) {
+      console.warn("Catalog refresh failed", e);
+    }
+  }
+
+  function scheduleCatalogRefresh() {
+    if (catalogRefreshTimer) return;
+    catalogRefreshTimer = setTimeout(() => {
+      catalogRefreshTimer = null;
+      refreshFromCatalog();
+    }, 2500);
   }
 
   function retryIfIncomplete() {
@@ -289,10 +569,6 @@
   function showCleanState() {
     resultsEl.replaceChildren();
     statusEl.textContent = "";
-    const msg = document.createElement("div");
-    msg.className = "no-results";
-    msg.textContent = "Enter a search query to begin";
-    resultsEl.appendChild(msg);
   }
 
   function refreshResults() {
@@ -304,6 +580,7 @@
     } else {
       showCleanState();
     }
+    updateCardsVisibility();
   }
 
   function renderResults(results) {
@@ -350,7 +627,18 @@
         el.onclick = (e) => { e.stopPropagation(); handleSCIDClick(r.scid); };
       });
       content.append(urlEl, nameEl, scidEl, descrEl, ratingEl);
-      div.append(iconSlot, content);
+      const bookmarkBtn = document.createElement("button");
+      bookmarkBtn.className = "result-bookmark";
+      const saved = typeof window.isBookmarked === "function" && window.isBookmarked(r.scid);
+      bookmarkBtn.textContent = saved ? "★" : "☆";
+      bookmarkBtn.classList.toggle("saved", saved);
+      bookmarkBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (typeof window.toggleSearchBookmark === "function") {
+          window.toggleSearchBookmark(r.scid);
+        }
+      };
+      div.append(iconSlot, content, bookmarkBtn);
       resultsEl.appendChild(div);
     });
   }
@@ -359,13 +647,6 @@
     if (scidInput) { scidInput.value = scid; scidInput.dispatchEvent(new Event("input")); }
     const directLoad = typeof window.getDirectLoadSetting === "function" ? window.getDirectLoadSetting() : true;
     if (directLoad && loadBtn) loadBtn.click();
-  }
-
-  function getDURLSuggestions(input) {
-    const q = input.trim().toLowerCase();
-    if (!q) return [];
-    return allResults.filter(r => (r.dURL || "").toLowerCase().startsWith(q))
-      .sort((a, b) => a.dURL.length - b.dURL.length).slice(0, 8);
   }
 
   function renderSuggestions(results) {
@@ -387,6 +668,7 @@
       searchSuggestions.appendChild(item);
     });
     searchSuggestions.classList.remove("hidden");
+    positionDropdown();
   }
 
   function hideSuggestions() {
@@ -425,7 +707,29 @@
       if (snapshotScids.has(r.scid)) clamped.push(r);
     }
     if (showResults) renderResults(clamped);
-    renderSuggestions(clamped.filter(r => (r.dURL || "").toLowerCase().includes(query.toLowerCase())));
+    renderSuggestions(getSuggestions(clamped, query));
+  }
+
+  /**
+   * Orders autocomplete suggestions from search results.
+   * The Fuse search matches scid, dURL, name AND description, so suggestions
+   * now surface apps whose description (or name/scid) matches the query —
+   * consistent with the full search. Exact dURL-prefix matches are kept on
+   * top so typing a partial dURL still autocompletes it first.
+   * @param {Array} results - Fuse-ranked search results
+   * @param {string} query - User search input
+   * @returns {Array} Reordered suggestion items
+   */
+  function getSuggestions(results, query) {
+    const q = query.toLowerCase();
+    const durlFirst = [];
+    const rest = [];
+    for (const r of results) {
+      const d = (r.dURL || "").toLowerCase();
+      if (d.startsWith(q)) durlFirst.push(r);
+      else rest.push(r);
+    }
+    return durlFirst.concat(rest);
   }
 
   searchBox.addEventListener("input", e => { suggestionIndex = -1; updateSearchClear(); runSearch(e.target.value, { showResults: showAllSCIDs }); });
@@ -470,9 +774,32 @@
   });
   searchBox.addEventListener("blur", () => { setTimeout(hideSuggestions, 150); });
 
+  // Show/hide bottom cards on search focus
+  function updateCardsVisibility() {
+    if (!searchCardsEl) return;
+    const enabled = typeof window.getShowSearchCardsSetting === "function" ? window.getShowSearchCardsSetting() : true;
+    if (!enabled) { searchCardsEl.classList.add("hidden-cards"); return; }
+    const hasFocus = document.activeElement === searchBox;
+    const hasResults = resultsEl.children.length > 0;
+    searchCardsEl.classList.toggle("hidden-cards", hasFocus || showAllSCIDs || hasResults);
+  }
+
+  searchBox.addEventListener("focus", () => { updateCardsVisibility(); positionDropdown(); });
+  searchBox.addEventListener("blur", () => setTimeout(updateCardsVisibility, 150));
+  searchBox.addEventListener("input", () => { updateCardsVisibility(); positionDropdown(); });
+  window.addEventListener("resize", positionDropdown);
+  document.getElementById("content")?.addEventListener("scroll", positionDropdown);
+
   minRatingEl?.addEventListener("input", e => { minRating = Number(e.target.value); minRatingVal.textContent = minRating; refreshResults(); });
 
   initSortDropdown();
+
+  // Render the Latest Finds card immediately (placeholder until data arrives)
+  // so the 3-card layout is stable from the very first paint.
+  updateLatestFinds();
+
+  // Refresh result bookmark stars when bookmarks change
+  document.addEventListener("bookmarksChanged", () => { refreshResults(); });
 
   if (showAllToggle) {
     showAllToggle.addEventListener("change", () => {
@@ -484,8 +811,14 @@
   document.addEventListener("pageChanged", async (e) => {
     if (e.detail.page === "search") {
       metadataRetries = 0;
-      if (!resultsLoaded) { await loadSearchSCIDs(); }
-      else { refreshResults(); }
+      updateLatestFinds();
+      // Reload whenever the catalog is empty or grew since the last full load
+      // — never show a stale (e.g. empty-on-install) cached state on activation.
+      if (!resultsLoaded || allResults.length === 0 || allResults.length !== lastFullLoadCount) {
+        await loadSearchSCIDs();
+      } else {
+        refreshResults();
+      }
     }
   });
 
@@ -498,38 +831,294 @@
   });
 
   (async () => {
+    // Probe the router's own discovery endpoint (works offline via the on-disk
+    // store/cache, and has no gnomon-port race). If apps already exist from a
+    // previous session, load them immediately so the Search page is never
+    // blank on first open.
     try {
-      const resp = await fetch(`${apiBase}/tela`);
+      const resp = await fetch("/api/tela/discover");
       if (!resp.ok) return;
       const data = await resp.json();
-      if (data.count > 0) { searchBox.disabled = false; await loadSearchSCIDs(); }
+      if (data?.ok && data?.result?.apps?.length > 0) {
+        searchBox.disabled = false;
+        await loadSearchSCIDs();
+      }
     } catch {}
   })();
 
   // Listen for new SCIDs discovered during Gnomon sync (via WS)
   document.addEventListener("wsEvent", (e) => {
     const msg = e.detail;
-    if (msg.event === "tip_synced") { loadSearchSCIDs(); return; }
+    if (msg.event === "tip_synced") {
+      // Full reload (incl. ratings) once sync catches the tip. Re-armed on
+      // every connect/reconnect by the backend, so this is a reliable signal.
+      loadSearchSCIDs();
+      return;
+    }
+    if (msg.event === "catalog_progress") {
+      // Fires every ~2s while the indexer discovers apps: refresh the visible
+      // catalog live (throttled) so Search fills in during first sync without
+      // a manual refresh. Skip when nothing is happening yet.
+      if (resultsLoaded || allResults.length > 0 || msg.total > 0) {
+        scheduleCatalogRefresh();
+      }
+      return;
+    }
     if (msg.event === "new_tela_app" && msg.scid) {
-      (async () => {
-        try {
-          const disc = await fetch("/api/tela/discover");
-          const data = await disc.json();
-          if (!data?.ok || !data?.result?.apps) return;
-          const match = data.result.apps.find(a => a.scid === msg.scid);
-          if (!match) return;
-          const entry = {
-            scid: msg.scid, dURL: match.durl || msg.scid, nameHdr: match.name || msg.scid,
-            descrHdr: match.descrHdr || "", iconURL: match.iconURL || "",
-            likes: 0, dislikes: 0, average: 0, createdHeight: match.install_height || 0, ratingsLoaded: false, from_api: match.from_api
-          };
-          if (allResults.some(r => r.scid === msg.scid)) return;
-          allResults.push(entry);
-          fuse.setCollection(allResults);
-          refreshResults();
-          if (statusEl) { const cnt = allResults.length; statusEl.textContent = `✅ Loaded ${cnt} app${cnt !== 1 ? "s" : ""} (direct)`; }
-        } catch (e) { console.warn("Failed to add newly discovered SCID:", e); }
-      })();
+      // Lightweight: let the throttled catalog refresh pick up the new app —
+      // no per-event discover scan (avoids O(N²) churn during FastSync bursts).
+      scheduleCatalogRefresh();
     }
   });
+
+  // ===================== LIVE INFO CARD (Updates + RSS) =====================
+  
+  // Live info card elements
+  const liveInfoCard = document.getElementById("live-info-card");
+  const updateBanner = document.getElementById("update-banner");
+  const updateCurrentMsg = document.getElementById("update-current-message");
+  const updateLatestVersionEl = document.getElementById("update-latest-version");
+  const updateCurrentVersionEl = document.getElementById("update-current-version");
+  const currentVersionDisplayEl = document.getElementById("current-version-display");
+  const updateViewBtn = document.getElementById("update-view-btn");
+  const updateDismissBtn = document.getElementById("update-dismiss-btn");
+  const liveInfoRefreshBtn = document.getElementById("live-info-refresh");
+  const rssFeedList = document.getElementById("rss-feed-list");
+  const rssFeedTitle = document.getElementById("rss-feed-title");
+  const rssFeedUpdated = document.getElementById("rss-feed-updated");
+  
+  // State
+  let currentAppVersion = "0.8.5";
+  let rssFeedUrl = "https://dero.world/anotherworld/feed/";
+  let updateCheckEnabled = true;
+  let rssRefreshInterval = null;
+  let dismissedUpdateVersion = null;
+  
+  // Load settings from global settings (synced with config.json via settings page)
+  function loadLiveInfoSettings() {
+    if (typeof window.getRSSFeedUrlSetting === "function") {
+      rssFeedUrl = window.getRSSFeedUrlSetting();
+    }
+    if (typeof window.getCheckUpdatesSetting === "function") {
+      updateCheckEnabled = window.getCheckUpdatesSetting();
+    }
+    // Load dismissed version from localStorage (persists across sessions)
+    try {
+      const stored = JSON.parse(localStorage.getItem("hyperwolf.liveInfoSettings") || "{}");
+      dismissedUpdateVersion = stored.dismissedUpdateVersion || null;
+    } catch (e) {}
+  }
+  
+  function saveLiveInfoSettings() {
+    try {
+      localStorage.setItem("hyperwolf.liveInfoSettings", JSON.stringify({
+        rssFeedUrl,
+        updateCheckEnabled,
+        dismissedUpdateVersion
+      }));
+    } catch (e) {}
+  }
+  
+  // Format relative time (e.g., "2h ago", "1d ago")
+  function formatRelativeTime(dateStr) {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  }
+  
+  // Sanitize HTML to prevent XSS
+  function sanitizeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  
+  // Render RSS feed items
+  function renderRSSFeed(items, feedTitle, feedUpdated) {
+    if (!rssFeedList) return;
+    
+    if (!items || items.length === 0) {
+      rssFeedList.innerHTML = '<div class="rss-empty">No feed items found</div>';
+      return;
+    }
+    
+    // Show up to 5 items (scrollable inside the one-item window)
+    const displayItems = items.slice(0, 5);
+    
+    rssFeedList.innerHTML = "";
+    displayItems.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "rss-item";
+      div.innerHTML = `
+        <span class="rss-item-title">${sanitizeHtml(item.title)}</span>
+        <div class="rss-item-meta">
+          <span class="rss-item-source">${sanitizeHtml(item.source || feedTitle)}</span>
+          <span class="rss-item-date">${formatRelativeTime(item.pub_date)}</span>
+        </div>
+      `;
+      div.onclick = () => {
+        if (item.link) {
+          window.open(item.link, "_blank", "noopener,noreferrer");
+        }
+      };
+      div.style.cursor = "pointer";
+      rssFeedList.appendChild(div);
+    });
+    
+    if (rssFeedTitle) rssFeedTitle.textContent = feedTitle || "📰 Dero.World AnotherWorld";
+    if (rssFeedUpdated) rssFeedUpdated.textContent = feedUpdated ? formatRelativeTime(feedUpdated) : "";
+  }
+  
+  // Load RSS feed
+  async function loadRSSFeed() {
+    if (!rssFeedList) return;
+    
+    rssFeedList.innerHTML = '<div class="rss-loading">Loading feed...</div>';
+    
+    try {
+      const resp = await fetch(`/api/rss?url=${encodeURIComponent(rssFeedUrl)}`);
+      const data = await resp.json();
+      
+      if (data.ok && data.result) {
+        renderRSSFeed(data.result.items, data.result.title, data.result.updated);
+      } else {
+        rssFeedList.innerHTML = `<div class="rss-error">Failed to load: ${data.error || "Unknown error"}</div>`;
+      }
+    } catch (err) {
+      console.error("RSS feed load error:", err);
+      rssFeedList.innerHTML = '<div class="rss-error">Failed to load feed</div>';
+    }
+  }
+  
+  // Check for application updates
+  async function checkForUpdates() {
+    if (!updateCheckEnabled) {
+      showUpdateCurrent();
+      return;
+    }
+    
+    try {
+      const resp = await fetch("/api/update-check");
+      const data = await resp.json();
+      
+      if (data.ok && data.result) {
+        const result = data.result;
+        currentAppVersion = result.current_version;
+        
+        if (result.update_available && result.latest_version !== dismissedUpdateVersion) {
+          showUpdateBanner(result);
+        } else {
+          showUpdateCurrent();
+        }
+      } else {
+        // Failed to check - silently show current version
+        showUpdateCurrent();
+      }
+    } catch (err) {
+      console.error("Update check error:", err);
+      showUpdateCurrent();
+    }
+  }
+  
+  function showUpdateBanner(result) {
+    if (updateBanner) updateBanner.classList.remove("hidden");
+    if (updateCurrentMsg) updateCurrentMsg.classList.add("hidden");
+    if (updateLatestVersionEl) updateLatestVersionEl.textContent = result.latest_version;
+    if (updateCurrentVersionEl) updateCurrentVersionEl.textContent = result.current_version;
+    
+    // Store current version for dismissal comparison
+    currentAppVersion = result.current_version;
+  }
+  
+  function showUpdateCurrent() {
+    if (updateBanner) updateBanner.classList.add("hidden");
+    if (updateCurrentMsg) updateCurrentMsg.classList.remove("hidden");
+    if (currentVersionDisplayEl) currentVersionDisplayEl.textContent = currentAppVersion;
+  }
+  
+  // Dismiss update notification
+  function dismissUpdate() {
+    dismissedUpdateVersion = currentAppVersion;
+    saveLiveInfoSettings();
+    showUpdateCurrent();
+  }
+  
+  // Initialize live info card
+  function initLiveInfoCard() {
+    loadLiveInfoSettings();
+    
+    // Set up event listeners
+    if (updateDismissBtn) {
+      updateDismissBtn.onclick = dismissUpdate;
+    }
+    
+    if (updateViewBtn) {
+      updateViewBtn.onclick = () => {
+        window.open("https://github.com/Dirtybird99/HyperWolf/releases", "_blank", "noopener,noreferrer");
+      };
+    }
+    
+    if (liveInfoRefreshBtn) {
+      liveInfoRefreshBtn.onclick = () => {
+        checkForUpdates();
+        loadRSSFeed();
+      };
+    }
+    
+    // Initial load
+    checkForUpdates();
+    loadRSSFeed();
+    
+    // Set up periodic refresh (every 10 minutes)
+    rssRefreshInterval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        loadRSSFeed();
+        checkForUpdates();
+      }
+    }, 10 * 60 * 1000);
+    
+    // Refresh on page visibility change
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        loadRSSFeed();
+        checkForUpdates();
+      }
+    });
+    
+    // Refresh when search page becomes active
+    document.addEventListener("pageChanged", (e) => {
+      if (e.detail.page === "search") {
+        loadRSSFeed();
+        checkForUpdates();
+      }
+    });
+  }
+  
+  // Initialize when DOM is ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initLiveInfoCard);
+  } else {
+    initLiveInfoCard();
+  }
+  
+  // Expose for settings page to update
+  window.updateLiveInfoSettings = function(settings) {
+    if (settings.rssFeedUrl !== undefined) rssFeedUrl = settings.rssFeedUrl;
+    if (settings.updateCheckEnabled !== undefined) updateCheckEnabled = settings.updateCheckEnabled;
+    saveLiveInfoSettings();
+    loadRSSFeed();
+    checkForUpdates();
+  };
+
 })();
