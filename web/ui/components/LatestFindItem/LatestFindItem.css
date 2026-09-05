@@ -1,8 +1,7 @@
 /* ============================================================
    LatestFindItem.css
-   Mirrors the exact rules from style.css (.latest-find-*).
-   Authoritative copy still lives in style.css until a visual
-   regression baseline exists — then it can be removed there.
+   Canonical owner of the .latest-find-* rules (were removed from
+   style.css during the dependency dedupe).
    Composition-scoped overrides (.search-card .latest-find-item)
    intentionally stay in style.css with SearchCard.
    ============================================================ */

@@ -1,8 +1,7 @@
 /* ============================================================
    LogEntry.css
-   Mirrors the exact rules from style.css (.log-entry family).
-   Authoritative copy still lives in style.css until a visual
-   regression baseline exists — then it can be removed there.
+   Canonical owner of the .log-empty/.log-entry family rules (were
+   removed from style.css during the dependency dedupe).
    ============================================================ */
 
 .log-empty {

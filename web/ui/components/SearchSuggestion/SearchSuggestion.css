@@ -1,8 +1,8 @@
 /* ============================================================
    SearchSuggestion.css
-   Mirrors the exact rules from style.css (.search-suggestion).
-   Authoritative copy still lives in style.css until a visual
-   regression baseline exists — then it can be removed there.
+   Canonical owner of the .search-suggestion rules (were removed
+   from style.css during the dependency dedupe). The .search-dropdown
+   panel container stays in style.css with SearchCard.
    ============================================================ */
 
 .search-suggestion {

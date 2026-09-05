@@ -1,9 +1,7 @@
 /* ============================================================
    HexIcon.css
-   Mirrors the exact rules from style.css (.scid-svg).
-   Authoritative copy still lives in style.css until a visual
-   regression baseline exists (Storybook/Chromatic) — then it can
-   be removed from style.css and this file becomes the single home.
+   Canonical owner of the .scid-svg rules (were removed from
+   style.css during the dependency dedupe).
    ============================================================ */
 
 .scid-svg {

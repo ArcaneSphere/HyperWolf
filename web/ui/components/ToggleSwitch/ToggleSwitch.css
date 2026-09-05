@@ -1,8 +1,7 @@
 /* ============================================================
    ToggleSwitch.css
-   Mirrors the exact rules from style.css (.toggle-switch*).
-   Authoritative copy still lives in style.css until a visual
-   regression baseline exists — then it can be removed there.
+   Canonical owner of the .toggle-switch* rules (were removed from
+   style.css during the dependency dedupe).
    Scope overrides (.controls-row .toggle-*) stay in style.css
    with the ControlsRow composition.
    ============================================================ */

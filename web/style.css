@@ -294,102 +294,7 @@ body {
   transform: translateY(0);
 }
 
-/* ===============================
-   TOAST NOTIFICATIONS
-=============================== */
-
-.status-box {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
-  max-width: 420px;
-}
-
-.toast {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: var(--radius);
-  background: var(--color-panel);
-  border: 1px solid var(--color-border-2);
-  box-shadow: var(--shadow-md);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text);
-  animation: toast-in 0.25s ease-out;
-  border-left: 3px solid var(--color-muted);
-}
-
-.toast-connected {
-  border-left-color: var(--color-success);
-}
-
-.toast-error {
-  border-left-color: var(--color-danger);
-}
-
-.toast-warning {
-  border-left-color: var(--color-warning);
-}
-
-.toast-pending {
-  border-left-color: var(--color-accent);
-}
-
-.toast .toast-msg {
-  flex: 1;
-  min-width: 0;
-}
-
-.toast .toast-close {
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-secondary);
-  font-size: 16px;
-  line-height: 1;
-  padding: 2px;
-  opacity: 0.5;
-  transition: opacity 0.15s;
-}
-
-.toast .toast-close:hover {
-  opacity: 1;
-}
-
-.toast.removing {
-  animation: toast-out 0.25s ease-in forwards;
-}
-
-@keyframes toast-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes toast-out {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
+/* TOAST — component CSS lives in web/ui/components/Toast/Toast.css */
 
 /* ===============================
    CONTENT
@@ -599,53 +504,7 @@ pre {
   gap: 16px;
 }
 
-/* Toggle switch */
-.toggle-switch {
-  position: relative;
-  width: 48px;
-  height: 26px;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.toggle-switch input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-slider {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--color-panel-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-toggle-track);
-  transition: 0.25s ease;
-}
-
-.toggle-slider::before {
-  content: "";
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  left: 2px;
-  bottom: 2px;
-  background: var(--color-text-secondary);
-  border-radius: 50%;
-  transition: 0.25s ease;
-}
-
-.toggle-switch input:checked + .toggle-slider {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  box-shadow: var(--color-glow);
-}
-
-.toggle-switch input:checked + .toggle-slider::before {
-  background: white;
-  transform: translateX(22px);
-}
+/* Toggle switch — base rules live in web/ui/components/ToggleSwitch/ToggleSwitch.css */
 
 /* Compact toggle for controls-row */
 .controls-row .toggle-switch {
@@ -692,33 +551,7 @@ pre {
   align-items: center;
 }
 
-.tag-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--color-panel-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xs);
-  padding: 2px 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.tag-chip .tag-remove {
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
-  color: var(--color-text-secondary);
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-}
-
-.tag-chip .tag-remove:hover {
-  color: var(--color-danger);
-}
+/* Tag chips — base rules live in web/ui/components/TagChip/TagChip.css */
 
 #tag-input-field {
   border: none;
@@ -1074,78 +907,11 @@ button.success:hover {
    POPOVER
 =============================== */
 
-.popover {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--scrim);
-}
-
-.popover-content {
-  background: var(--color-panel);
-  border: 1px solid var(--color-border-2);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  min-width: 280px;
-  box-shadow: var(--shadow-lg);
-}
-
-.popover-title {
-  font-weight: 700;
-  font-size: 15px;
-  margin-bottom: 12px;
-}
-
-.popover-content input {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: var(--radius);
-  border: 1px solid var(--color-border-2);
-  background: var(--color-input);
-  color: var(--color-text);
-  font-size: 14px;
-  margin-bottom: 12px;
-  box-sizing: border-box;
-}
-
-.popover-content input:focus {
-  border-color: var(--color-accent);
-  outline: none;
-}
-
-.popover-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.popover-actions button {
-  padding: 8px 16px;
-  border-radius: var(--radius);
-  border: none;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.popover-actions .secondary {
-  background: var(--color-panel-2);
-  color: var(--color-text-secondary);
-}
+/* POPOVER — component CSS lives in web/ui/components/Popover/Popover.css */
 
 /* ===============================
    ONBOARDING POPOVER
 =============================== */
-
-.onboarding-content {
-  max-width: 420px;
-}
 
 #onboarding-popover {
   background: var(--scrim-strong);
@@ -1153,12 +919,7 @@ button.success:hover {
   -webkit-backdrop-filter: blur(8px);
 }
 
-.onboarding-desc {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  margin-bottom: 12px;
-  line-height: 1.5;
-}
+/* .onboarding-desc — live in Popover.css */
 
 .onboarding-nodes {
   display: flex;
@@ -1363,104 +1124,12 @@ body.g-instagram {
 
 .hidden { display: none !important; }
 
-.search-suggestion {
-  padding: 14px 18px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--color-border);
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.search-suggestion:last-child {
-  border-bottom: none;
-}
-
-.search-suggestion:hover,
-.search-suggestion.selected {
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-}
-
-.search-suggestion .durl {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-accent);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.search-suggestion .meta {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  font-family: monospace;
-  opacity: 0.7;
-}
-
-[data-theme="dark"] .search-suggestion:hover,
-[data-theme="dark"] .search-suggestion.selected {
-  box-shadow: var(--ring-accent);
-}
-
-.search-suggestion.selected {
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-  border-left: 2px solid var(--color-accent);
-}
+/* .search-suggestion rules — live in web/ui/components/SearchSuggestion/SearchSuggestion.css */
 
 /* --------END SEARCH DROPDOWN-------------- */
 
 #results {
   margin-top: 24px;
-}
-
-.result {
-  border-bottom: 1px solid var(--hairline);
-  padding: 20px 16px;
-  display: flex;
-  gap: 16px;
-  transition: var(--transition);
-  cursor: pointer;
-  border-radius: var(--radius);
-  background: var(--surface-result);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  margin-bottom: 4px;
-}
-
-[data-theme="light"] .result {
-  border-bottom-color: var(--hairline);
-  background: var(--surface-result);
-}
-
-/* Mouse hover only when NOT keyboard navigating */
-body:not(.keyboard-nav) .result:hover,
-.result.keyboard-selected {
-  background: var(--color-panel);
-  margin: 0 -16px;
-  padding: 20px 16px;
-  border-radius: var(--radius);
-  border-color: var(--color-accent);
-}
-
-/* Dark mode glow */
-body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
-[data-theme="dark"] .result.keyboard-selected {
-  box-shadow: var(--color-glow);
-}
-
-/* Active keyboard-selected text colors */
-.result.keyboard-selected .nameHdr,
-.result.keyboard-selected .scid {
-  color: var(--color-accent);
-}
-
-/* Prevent hover flicker conflicts */
-.result.keyboard-selected {
-  position: relative;
-  z-index: 2;
 }
 
 /* ------------------- Latest finds panel ------------------- */
@@ -1488,38 +1157,7 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
   white-space: nowrap;
 }
 
-.latest-find-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 8px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.latest-find-item:last-child {
-  border-bottom: none;
-}
-
-body:not(.keyboard-nav) .latest-find-item:hover {
-  background: var(--color-accent-soft);
-}
-
-.latest-find-item .icon-slot {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-}
-
-.latest-find-item .icon-slot .icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-icon-sm);
-  display: block;
-  object-fit: cover;
-  border: 1px solid var(--color-border);
-}
+/* .latest-find-item base rules live in web/ui/components/LatestFindItem/LatestFindItem.css */
 
 .search-card .latest-find-item .icon-slot {
   display: none;
@@ -1549,140 +1187,8 @@ body:not(.keyboard-nav) .latest-find-item:hover {
   font-size: 0.75em;
 }
 
-.latest-find-item .content {
-  flex: 1;
-  min-width: 0;
-}
-
-.latest-find-empty {
-  padding: 14px 16px;
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  text-align: center;
-  line-height: 1.5;
-}
-
-.latest-find-item .url {
-  font-size: 12px;
-  color: var(--color-accent);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.latest-find-item .nameHdr {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.latest-find-item .scid {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  font-family: 'Courier New', monospace;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.latest-find-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  font-size: 11px;
-  color: var(--color-muted);
-  white-space: nowrap;
-}
-
-.latest-find-tag {
-  background: var(--color-accent);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: var(--radius-lg);
-  letter-spacing: 0.5px;
-}
-
-.result .icon-slot {
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-}
-
-.result .icon-slot .icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-lg);
-  display: block;
-  object-fit: cover;
-  border: 1px solid var(--color-border);
-}
-
-.result .content {
-  flex: 1;
-  min-width: 0;
-}
-
-.url {
-  font-size: 12px;
-  color: var(--color-accent);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.nameHdr {
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.4;
-  margin-bottom: 6px;
-  color: var(--color-text);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.nameHdr:hover {
-  color: var(--color-accent);
-}
-
-.scid {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  font-family: 'Courier New', monospace;
-  margin-bottom: 8px;
-  transition: var(--transition);
-}
-
-.scid:hover {
-  color: var(--color-accent);
-}
-
-.descr {
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--color-text-secondary);
-  margin-bottom: 8px;
-}
-
-.rating {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--color-muted);
-  font-weight: 500;
-}
+/* .result family / .icon-slot / .url / .nameHdr / .scid / .descr /
+   .rating / .result-bookmark — live in ResultRow.css and HexIcon.css */
 
 #search-status {
   margin-left: auto;
@@ -1704,63 +1210,9 @@ body:not(.keyboard-nav) .latest-find-item:hover {
   border-color: var(--hairline);
 }
 
-/* Container holding the icon */
-.icon-slot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--scid-size, 48px);
-  height: var(--scid-size, 48px);
-  position: relative;
-}
+/* Container holding the icon + .scid-svg — live in HexIcon.css */
 
-.scid-svg {
-  width: 90%;
-  height: 90%;
-  max-width: 100%;
-  max-height: 100%;
-  color: var(--color-accent);
-  display: block;
-}
-
-[data-theme="dark"] .scid-svg {
-  color: var(--color-accent);
-}
-
-.result .scid-svg { --scid-size: 48px; }
-#sidebar .scid-svg { --scid-size: 32px; }
-
-@keyframes card-click-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-.result.clicking {
-  animation: card-click-pulse 0.4s ease 1;
-}
-
-.result-bookmark {
-  align-self: flex-start;
-  margin-top: 4px;
-  background: none;
-  border: none;
-  color: var(--color-star);
-  font-size: 20px;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: var(--radius-xs);
-  transition: var(--transition);
-  flex-shrink: 0;
-}
-
-.result-bookmark:hover {
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-}
-
-.result-bookmark.saved {
-  color: var(--color-accent);
-  text-shadow: 0 0 6px var(--color-accent);
-}
+/* .result.clicking + card-click-pulse + .result-bookmark — live in ResultRow.css */
 
 .retry-btn {
   background: none;
@@ -2313,41 +1765,17 @@ body:not(.keyboard-nav) .latest-find-item:hover {
    NATIVE STATUS DOT
 ================================ */
 
-.status-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 6px;
-  background: var(--color-muted);
-  transition: var(--transition);
-}
+/* ===============================
+   NATIVE STATUS DOT
+================================ */
 
-.status-dot.connected {
-  background: var(--color-accent);
-  box-shadow: 0 0 6px var(--color-accent);
-}
-
-.status-dot.error {
-  background: var(--color-danger);
-  box-shadow: 0 0 6px var(--color-danger);
-}
-
-.status-dot.warning {
-  background: var(--color-warning);
-  box-shadow: 0 0 6px var(--color-warning);
-}
+/* .status-dot — live in StatusDot.css */
 
 /* ===============================
    UTILITIES
 ================================ */
 
-.no-results {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--color-muted);
-  font-size: 15px;
-}
+/* .no-results — live in NoResults.css */
 
 /* ===============================
    SCROLLBAR
@@ -2578,27 +2006,8 @@ body:not(.keyboard-nav) .latest-find-item:hover {
     width: 140px;
   }
 
-  .result {
-    padding: 16px 12px;
-    gap: 12px;
-  }
-
-  .result .icon-slot {
-    width: 40px;
-    height: 40px;
-  }
-
-  .nameHdr {
-    font-size: 16px;
-  }
-
-  .descr {
-    font-size: 13px;
-  }
-
-  .toast {
-    max-width: calc(100vw - 32px);
-  }
+  /* .result / .icon-slot / .nameHdr / .descr responsive rules —
+     live in ResultRow.css; .toast — live in Toast.css */
 }
 
 @media (max-width: 640px) {
@@ -2747,15 +2156,7 @@ body:not(.keyboard-nav) .latest-find-item:hover {
     justify-content: center;
   }
 
-  .status-box {
-    left: 12px;
-    right: 12px;
-    max-width: none;
-  }
-
-  .toast {
-    width: 100%;
-  }
+  /* .status-box / .toast 640px rules — live in Toast.css */
 
   .rss-feed-list {
     max-height: 66px;
@@ -2849,81 +2250,7 @@ body:not(.keyboard-nav) .latest-find-item:hover {
   scrollbar-gutter: stable;
 }
 
-.log-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--color-text-secondary);
-  font-style: italic;
-}
-
-.log-entry {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.log-entry:last-child {
-  border-bottom: none;
-}
-
-.log-entry:hover {
-  background: var(--color-accent-soft);
-}
-
-.log-timestamp {
-  color: var(--color-text-secondary);
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-  min-width: 120px;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-.log-level {
-  font-family: 'Courier New', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  min-width: 70px;
-  flex-shrink: 0;
-  text-align: center;
-  padding: 2px 8px;
-  border-radius: var(--radius-xs);
-  white-space: nowrap;
-}
-
-.log-level.INFO {
-  background: var(--color-info-soft);
-  color: var(--color-info);
-}
-
-.log-level.WARN {
-  background: var(--color-warning-soft);
-  color: var(--color-warning);
-}
-
-.log-level.ERROR {
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
-}
-
-.log-level.SUCCESS {
-  background: var(--color-success-soft);
-  color: var(--color-success);
-}
-
-.log-message {
-  color: var(--color-text);
-  flex: 1;
-  word-break: break-word;
-  white-space: pre-wrap;
-  font-family: inherit;
-}
+/* .log-empty / .log-entry family + dark hover — live in LogEntry.css */
 
 .log-controls {
   display: flex;
@@ -2951,12 +2278,10 @@ body:not(.keyboard-nav) .latest-find-item:hover {
   gap: 6px;
 }
 
-/* Dark mode log styling */
+/* Dark mode log container styling */
 [data-theme="dark"] .log-container {
   background: var(--log-bg);
   border-color: var(--log-border);
 }
 
-[data-theme="dark"] .log-entry:hover {
-  background: var(--log-hover-bg);
-}
+/* [data-theme="dark"] .log-entry:hover — live in LogEntry.css */

@@ -1,9 +1,10 @@
 /* ============================================================
    Popover.css
-   Mirrors the exact rules from style.css (.popover*) plus the
-   inline styles of #confirm-popover's <p> and the onboarding
-   content extensions. Authoritative copy still lives in
-   style.css until a visual regression baseline exists.
+   Canonical owner of the .popover* rules plus the inline styles
+   of #confirm-popover's <p> and the onboarding content extension
+   (.onboarding-content/.onboarding-desc). These were removed from
+   style.css during the dependency dedupe; the #onboarding-popover
+   overlay + .onboarding-nodes flow stay in style.css.
    ============================================================ */
 
 .popover {

@@ -1,9 +1,8 @@
 /* ============================================================
    ResultRow.css
-   Mirrors the exact rules from style.css for .result / .url /
-   .nameHdr / .scid / .descr / .rating / .result-bookmark.
-   Authoritative copy still lives in style.css until a visual
-   regression baseline exists — then it can be removed there.
+   Canonical owner of the .result / .url / .nameHdr / .scid /
+   .descr / .rating / .icon-slot / .result-bookmark rules (were
+   removed from style.css during the dependency dedupe).
    Shared classes (.url, .nameHdr) also used by LatestFindItem.
    ============================================================ */
 
@@ -174,5 +173,17 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
 
   .descr {
     font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .result {
+    padding: 16px 12px;
+    gap: 12px;
+  }
+
+  .result .icon-slot {
+    width: 40px;
+    height: 40px;
   }
 }

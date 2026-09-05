@@ -1,8 +1,7 @@
 /* ============================================================
    TagChip.css
-   Mirrors the exact rules from style.css (.tag-chip*).
-   Authoritative copy still lives in style.css until a visual
-   regression baseline exists — then it can be removed there.
+   Canonical owner of the .tag-chip* rules (were removed from
+   style.css during the dependency dedupe).
    The input styling (#tag-input-field) stays in style.css with
    the TagInput composition.
    ============================================================ */

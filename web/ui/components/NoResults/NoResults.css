@@ -1,8 +1,7 @@
 /* ============================================================
    NoResults.css
-   Mirrors the exact rules from style.css (.no-results).
-   Authoritative copy still lives in style.css until a visual
-   regression baseline exists — then it can be removed there.
+   Canonical owner of the .no-results rule (was removed from
+   style.css during the dependency dedupe).
    ============================================================ */
 
 .no-results {

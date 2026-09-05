@@ -1,8 +1,7 @@
 /* ============================================================
    StatusDot.css
-   Mirrors the exact rules from style.css (.status-dot).
-   Authoritative copy still lives in style.css until a visual
-   regression baseline exists — then it can be removed there.
+   Canonical owner of the .status-dot rules (were removed from
+   style.css during the dependency dedupe).
    ============================================================ */
 
 .status-dot {

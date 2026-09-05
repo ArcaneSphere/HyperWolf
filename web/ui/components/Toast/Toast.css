@@ -1,8 +1,7 @@
 /* ============================================================
    Toast.css
-   Mirrors the exact rules from style.css (.status-box, .toast).
-   Authoritative copy still lives in style.css until a visual
-   regression baseline exists — then it can be removed there.
+   Canonical owner of the .status-box/.toast rules (were removed
+   from style.css during the dependency dedupe).
    ============================================================ */
 
 .status-box {
