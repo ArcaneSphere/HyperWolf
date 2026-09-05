@@ -127,7 +127,7 @@ cp hyperwolf ~/.local/bin/hyperwolf                              # anders "Text 
 nohup ~/.local/bin/hyperwolf > /tmp/hyperwolf.log 2>&1 & disown  # start
 ps aux | grep '[h]yperwolf' | grep -v bash                        # PID check
 ```
-**Huidig:** PID 302144 actief, dashboard `http://127.0.0.1:18080/` (200 OK). Vorige commit (met 15 componenten) draaide op PID 283264.
+**Huidig:** PID 325539 actief, dashboard `http://127.0.0.1:18080/` → 200 OK (HERBOUDEN: guardrails-commit `ea27c63`, embedding huidige `web/`).
 
 ---
 
@@ -175,5 +175,5 @@ De `subjectTokenRules`-scan (rule-subject i.p.v. elk klasse-voorkomen) toonde 11
 | `web/ui/registry.js` + `registry.json` | 19 componenten; `npm run registry` |
 | `web/tokens.css` | design tokens |
 | `internal/buildinfo/version.go` | versie 0.10.0 |
-| `~/.local/bin/hyperwolf` | geïnstalleerde binary (PID 302144) |
+| `~/.local/bin/hyperwolf` | geïnstalleerde binary (PID 325539) |
 | `DOCS/PROJECT_STATUS.md` | dit bestand |
