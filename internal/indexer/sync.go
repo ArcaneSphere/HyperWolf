@@ -104,10 +104,35 @@ func (sm *SyncManager) InitStorage() error {
 	}
 	sm.DBDir = filepath.Join(home, ".hyperwolf", "gnomondb")
 
+	// Cold-start policy: HyperWolf only consumes the current contract state,
+	// so a replay/catch-up index is pure overhead — the gnomondb grows without
+	// bound (3.8 GB vs ~124 MB for an equivalent FastSync). Wipe the DB on every
+	// app start so the syncer always begins from a clean FastSync and never
+	// reloads / re-scans accumulated history. The discovery fallback
+	// (app-cache.json, a sibling of gnomondb) is intentionally left intact so
+	// the dashboard still shows the previous catalog until FastSync repopulates
+	// the live index.
+	if err := sm.wipeDBDir(); err != nil {
+		log.Printf("Storage: wipe gnomondb: %v (continuing)", err)
+	}
+
 	if err := os.MkdirAll(sm.DBDir, 0755); err != nil {
 		return fmt.Errorf("mkdir db dir: %w", err)
 	}
 	log.Printf("Storage ready: %s", sm.DBDir)
+	return nil
+}
+
+// wipeDBDir removes the existing gnomondb directory so the next sync starts
+// from a clean FastSync. Sibling files such as app-cache.json are preserved.
+func (sm *SyncManager) wipeDBDir() error {
+	if _, err := os.Stat(sm.DBDir); os.IsNotExist(err) {
+		return nil // nothing to wipe; already a fresh start
+	}
+	log.Printf("Storage: wiping gnomondb at %s", sm.DBDir)
+	if err := os.RemoveAll(sm.DBDir); err != nil {
+		return fmt.Errorf("remove gnomondb: %w", err)
+	}
 	return nil
 }
 
