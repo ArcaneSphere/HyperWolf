@@ -17,6 +17,7 @@ import (
 
 	"github.com/civilware/tela"
 
+	"hyperwolf/internal/buildinfo"
 	"hyperwolf/internal/desktop"
 	"hyperwolf/internal/indexer"
 	"hyperwolf/internal/router"
@@ -29,8 +30,8 @@ import (
 var webFS embed.FS
 
 // Version is the HyperWolf application version.
-// Updated automatically during release; do not edit manually.
-const Version = "0.8.5"
+// Single source of truth lives in internal/buildinfo.
+const Version = buildinfo.Version
 
 var (
 	dashboardPort = flag.Int("dashboard-port", 18080, "dashboard HTTP server port")

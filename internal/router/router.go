@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"hyperwolf/internal/buildinfo"
 	"hyperwolf/internal/daemon"
 	"hyperwolf/internal/indexer"
 	"hyperwolf/internal/state"
@@ -220,7 +221,7 @@ func (h *Handlers) handleConfig(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, ctrlResp{OK: true, Result: map[string]any{
 		"gnomon_api_port": h.GnomonPort,
 		"tela_port":       h.TelaPort,
-		"version":         "0.8.5",
+		"version":         buildinfo.Version,
 	}})
 }
 
@@ -246,7 +247,7 @@ type UpdateCheckResponse struct {
 
 // handleUpdateCheck checks for application updates via GitHub API.
 func (h *Handlers) handleUpdateCheck(w http.ResponseWriter, r *http.Request) {
-	currentVersion := "0.8.5"
+	currentVersion := buildinfo.Version
 
 	// Fetch latest release from GitHub
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)

@@ -557,7 +557,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   autoConnect();
   connectWebSocket();
   showOnboardingPopover();
+  populateAboutVersion();
 });
+
+// Fill the About page version from /api/config so it can never
+// drift from the binary build.
+async function populateAboutVersion() {
+  const el = document.getElementById("hw-version");
+  if (!el) return;
+  try {
+    const resp = await fetch("/api/config");
+    const data = await resp.json();
+    if (data.ok && data.result?.version) el.textContent = data.result.version;
+  } catch (e) {
+    /* keep the static fallback */
+  }
+}
 
 // ================= DEFAULT BOOKMARKS =================
 const defaultBookmarks = {
