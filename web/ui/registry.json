@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-05T11:21:13.596Z",
+  "generatedAt": "2026-09-05T11:40:00.715Z",
   "version": 1,
   "purpose": "LLM UI registry: which component to use when, and what it relates to.",
-  "componentCount": 15,
+  "componentCount": 19,
   "components": [
     {
       "name": "BookmarkItem",
@@ -156,6 +156,32 @@
       "module": "UI.NoResults"
     },
     {
+      "name": "OnboardingFlow",
+      "group": "Server",
+      "title": "Server/OnboardingFlow",
+      "path": "ui/components/OnboardingFlow/OnboardingFlow.stories.js",
+      "description": "First-run overlay to pick a default node: selectable bookmark list (.onboarding-node-option with .onb-label/.onb-addr), custom address input, Skip/Connect actions. Selecting clears the input, typing clears the selection, Enter connects. Mounted on the document body (position overlay from Popover shell).",
+      "useWhen": [
+        "First-run / onboarding flows with a selectable list of options",
+        "Overlay pickers with a 'custom value' input + primary/secondary actions"
+      ],
+      "avoidWhen": [
+        "Single confirm dialogs — use Popover",
+        "Normal forms or in-page settings — use SettingItem"
+      ],
+      "related": [
+        "Popover",
+        "SettingItem",
+        "StatusDot"
+      ],
+      "stories": [
+        "WithNodes",
+        "EmptyList",
+        "Preselected"
+      ],
+      "module": "UI.OnboardingFlow"
+    },
+    {
       "name": "Popover",
       "group": "Overlays",
       "title": "Overlays/Popover",
@@ -241,6 +267,32 @@
       "module": "UI.SearchCard"
     },
     {
+      "name": "SearchControlsRow",
+      "group": "Search",
+      "title": "Search/SearchControlsRow",
+      "path": "ui/components/SearchControlsRow/SearchControlsRow.stories.js",
+      "description": "The search page filtering bar: a min-rating range slider with live value, a custom sort-mode dropdown (.custom-select family of classes), an 'All SCIDs' toggle-switch (compact overlay on ToggleSwitch) and an optional status readout. Builder returns refs and helpers (sortSelect.getValue, setStatus).",
+      "useWhen": [
+        "Filtering/search-result toolbars with slider + dropdown + toggle",
+        "Any compact custom-select dropdown (trigger + menu) composition"
+      ],
+      "avoidWhen": [
+        "Single native-styled select — keep a plain <select>",
+        "Settings page rows — use SettingItem"
+      ],
+      "related": [
+        "ResultRow",
+        "SettingItem",
+        "ToggleSwitch"
+      ],
+      "stories": [
+        "Standard",
+        "SortOnly",
+        "RatingAndToggle"
+      ],
+      "module": "UI.SearchControlsRow"
+    },
+    {
       "name": "SearchSuggestion",
       "group": "Search",
       "title": "Search/SearchSuggestion",
@@ -265,6 +317,32 @@
         "LongDomain"
       ],
       "module": "UI.SearchSuggestion"
+    },
+    {
+      "name": "SettingItem",
+      "group": "Settings",
+      "title": "Settings/SettingItem",
+      "path": "ui/components/SettingItem/SettingItem.stories.js",
+      "description": "One settings card. Stack layout: uppercase accent label, body content, trailing description. Row layout: label + description left, control (toggle/button) right. Hover lifts the card. Responsive: at <=640px the row stacks and padding shrinks.",
+      "useWhen": [
+        "Settings cards with a label and a description",
+        "Toggle rows (label + description left, toggle right)"
+      ],
+      "avoidWhen": [
+        "Search toolbar filters — use SearchControlsRow",
+        "Plain file-folder info blocks — use info-box (page shell)"
+      ],
+      "related": [
+        "Popover",
+        "SearchControlsRow",
+        "ToggleSwitch"
+      ],
+      "stories": [
+        "StackInput",
+        "RowToggle",
+        "RowGroup"
+      ],
+      "module": "UI.SettingItem"
     },
     {
       "name": "StatusCard",
@@ -315,6 +393,33 @@
         "AllStates"
       ],
       "module": "UI.StatusDot"
+    },
+    {
+      "name": "SyncProgress",
+      "group": "Server",
+      "title": "Server/SyncProgress",
+      "path": "ui/components/SyncProgress/SyncProgress.stories.js",
+      "description": "Chain-sync progress block: state label, thin 8px progress bar with animated fill transition, ETA label. Supports indeterminate mode (sliding 30% segment) via setIndeterminate(true) or percent:-1. API: setPercent, setLabel, setEta, setIndeterminate.",
+      "useWhen": [
+        "Sync/indexing progress indicators with percentage + ETA",
+        "Indeterminate progress (chain indexing start)"
+      ],
+      "avoidWhen": [
+        "Determinate loading spinners — use StatusDot / a plain spinner",
+        "Overall sync status summary — use StatusCard for the card wrapper"
+      ],
+      "related": [
+        "StatusCard",
+        "StatusDot"
+      ],
+      "stories": [
+        "Waiting",
+        "Indexing",
+        "Halfway",
+        "Synced",
+        "InsideStatusCard"
+      ],
+      "module": "UI.SyncProgress"
     },
     {
       "name": "TagChip",

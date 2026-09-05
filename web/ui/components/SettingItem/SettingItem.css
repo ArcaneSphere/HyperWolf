@@ -1,0 +1,70 @@
+/* ============================================================
+   SettingItem — one settings card with a label, optional
+   description and either stacked body content or a right-aligned
+   control (the .setting-row layout used next to toggles).
+   Canonical owner of the .setting-item family. Extracted from
+   web/style.css (CARDS + 640px rules) during the dependency
+   dedupe. Page-level .setting-section* layout rules stay in
+   style.css (that is page chrome, not this card).
+   ============================================================ */
+
+.setting-item {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.setting-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .setting-item:hover {
+  box-shadow: var(--color-glow);
+}
+
+.setting-label {
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  color: var(--color-accent);
+}
+
+.setting-description {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 8px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Descriptions beside a toggle are flush within the row (no bottom margin) */
+.setting-row .setting-description {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .setting-item {
+    padding: 16px;
+  }
+
+  .setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
