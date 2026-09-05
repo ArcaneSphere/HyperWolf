@@ -284,6 +284,17 @@ GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o hyperwolf.exe .
 
 > 💡 `CGO_ENABLED=0` produces a fully static binary — no external C libraries or system dependencies.
 
+### Web UI tooling
+
+The dashboard lives in `web/` and is embedded into the binary at build time (`//go:embed`). Component work uses the Storybook catalog plus the registry/guardrail scripts:
+
+```bash
+npm install              # dev deps only (Storybook + check tooling)
+npm run storybook        # component catalog at http://localhost:6006
+npm run registry         # regenerate web/ui/registry.json from *.stories.js
+npm run check            # guardrails — canonical CSS ownership, refs, registry sync
+```
+
 ### Tidy Dependencies
 
 ```bash
