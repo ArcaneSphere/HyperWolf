@@ -257,8 +257,8 @@
   --radius-xs: 4px;      /* progress bar, tag-chip, toggle thumb */
   --radius-sm: 6px;      /* code, copy-btn */
   --radius: 8px;         /* inputs, buttons, dropdowns, popovers, tag-input, status pills */
-  --radius-lg: 12px;     /* cards, modals, info-boxes, search-cards, sidebar header */
-  --radius-xl: 22px;     /* search pill (#searchBox) */
+  --radius-lg: 14px;     /* cards, modals, info-boxes, search-cards, sidebar header */
+  --radius-xl: 16px;     /* search pill (#searchBox) */
   --radius-pill: 20px;   /* theme toggle, status pills */
   --radius-full: 50%;    /* circles (toggle thumb, theme slider, status dots) */
   --radius-icon-sm: 10px;  /* latest-find-item icon, search-suggestion badge */
@@ -430,9 +430,10 @@
    ============================================================ */
 :root {
   /* Default: editor-style color blooms over the deep navy base */
-  --gradient-default: radial-gradient(1100px 560px at 12% -8%, rgba(167, 139, 250, 0.18), transparent 62%),
-                      radial-gradient(900px 520px at 88% 112%, rgba(34, 211, 238, 0.15), transparent 62%),
-                      radial-gradient(700px 420px at 50% 120%, rgba(244, 114, 182, 0.10), transparent 62%),
+  --gradient-default: radial-gradient(1200px 620px at 16% -12%, rgba(167, 139, 250, 0.20), transparent 60%),
+                      radial-gradient(1000px 560px at 84% 8%, rgba(34, 211, 238, 0.13), transparent 60%),
+                      radial-gradient(900px 680px at 50% 118%, rgba(244, 114, 182, 0.13), transparent 62%),
+                      radial-gradient(560px 300px at 50% -6%, rgba(96, 165, 250, 0.12), transparent 62%),
                       var(--color-bg);
 
   /* Gradient presets (settings picker) */
@@ -447,8 +448,9 @@
   --gradient-accent-soft: linear-gradient(135deg, rgba(34, 211, 238, 0.16), rgba(167, 139, 250, 0.16), rgba(244, 114, 182, 0.16));
 }
 [data-theme="light"] {
-  --gradient-default: radial-gradient(1100px 560px at 12% -8%, rgba(124, 58, 237, 0.10), transparent 60%),
-                      radial-gradient(900px 520px at 88% 112%, rgba(2, 132, 199, 0.08), transparent 60%),
+  --gradient-default: radial-gradient(1100px 600px at 16% -10%, rgba(124, 58, 237, 0.13), transparent 60%),
+                      radial-gradient(900px 560px at 84% 112%, rgba(2, 132, 199, 0.11), transparent 60%),
+                      radial-gradient(560px 320px at 50% -6%, rgba(14, 165, 233, 0.10), transparent 62%),
                       var(--color-bg);
   --gradient-ocean: linear-gradient(160deg, #dbeafe 0%, #e0e7ff 50%, #ede9fe 100%);
   --gradient-sunset: linear-gradient(160deg, #fce7f3 0%, #fde68a 50%, #fef3c7 100%);
@@ -480,8 +482,8 @@
   --header-left-padding: 64px;
 
   /* Search */
-  --search-max-width: 640px;
-  --search-pill-padding: 16px 22px 16px 48px;
+  --search-max-width: 660px;
+  --search-pill-padding: 17px 26px 17px 52px;
 
   /* Cards */
   --card-min-width: 260px;

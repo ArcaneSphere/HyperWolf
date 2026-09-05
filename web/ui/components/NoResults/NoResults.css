@@ -9,13 +9,13 @@
 .no-results {
   position: relative;
   text-align: center;
-  padding: 64px 24px;
+  padding: 72px 24px;
   margin: 8px 0;
   font-size: 15px;
   color: var(--color-muted);
-  background: var(--surface-result);
-  border: 1px dashed var(--color-border-2);
-  border-radius: var(--radius-lg);
+  background: radial-gradient(560px 220px at 50% 0%, var(--color-accent-soft), transparent 70%), var(--surface-result);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   animation: result-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -23,12 +23,19 @@
 
 .no-results::before {
   content: "⌗";
-  display: block;
-  font-size: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  font-size: 26px;
   line-height: 1;
-  margin-bottom: 14px;
   font-family: var(--font-mono);
   color: var(--syn-comment);
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border-2);
+  border-radius: 16px;
 }
 
 .no-results .no-results-title {

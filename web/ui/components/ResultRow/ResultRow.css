@@ -12,16 +12,16 @@
 .result {
   position: relative;
   border: 1px solid var(--hairline);
-  padding: 24px 18px;
+  padding: 22px 18px;
   display: flex;
-  gap: 16px;
+  gap: 18px;
   transition: var(--transition);
   cursor: pointer;
   border-radius: var(--radius-lg);
   background: var(--surface-result);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  margin-bottom: 6px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  margin-bottom: 8px;
   overflow: hidden;
   animation: result-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -73,9 +73,9 @@
 /* Mouse hover only when NOT keyboard navigating */
 body:not(.keyboard-nav) .result:hover,
 .result.keyboard-selected {
-  background: linear-gradient(90deg, var(--color-accent-soft), transparent 14%), var(--color-panel);
+  background: linear-gradient(90deg, var(--color-accent-soft), transparent 18%), var(--color-panel);
   border-color: var(--color-accent);
-  box-shadow: var(--shadow-md), var(--color-glow);
+  box-shadow: var(--shadow-md), 0 0 0 1px var(--border-search-box), var(--glow-base);
   transform: translateY(-2px);
 }
 

@@ -6,17 +6,14 @@
    ============================================================ */
 
 .search-suggestion {
-  padding: 14px 18px;
+  padding: 12px 14px;
+  margin: 2px 0;
   cursor: pointer;
-  border-bottom: 1px solid var(--color-border);
+  border-radius: 9px;
   transition: var(--transition);
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.search-suggestion:last-child {
-  border-bottom: none;
 }
 
 .search-suggestion:hover,

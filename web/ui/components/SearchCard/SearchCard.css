@@ -30,15 +30,15 @@
 .search-card {
   position: relative;
   background: var(--surface-search-card);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: none;
-  border-radius: var(--radius-lg);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
   overflow: hidden;
   transition: var(--transition);
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-search-card);
+  box-shadow: var(--shadow-search-card), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .search-card::before {
@@ -61,7 +61,9 @@
 
 .search-card:hover,
 [data-theme="light"] .search-card:hover {
-  border-color: transparent;
+  border-color: var(--color-border-2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-search-box), var(--glow-base);
 }
 
 .search-card-header {

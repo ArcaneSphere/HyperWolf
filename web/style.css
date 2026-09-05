@@ -54,13 +54,13 @@ body {
   left: 0;
   bottom: 0;
   width: 300px;
-  background: var(--color-panel);
-  border-right: 1px solid var(--color-border);
+  background: linear-gradient(180deg, var(--color-panel) 0%, color-mix(in srgb, var(--color-panel) 88%, var(--color-bg)) 100%);
+  border-right: 1px solid var(--hairline);
   display: flex;
   flex-direction: column;
   z-index: 500;
   transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
   box-shadow: none;
 }
 
@@ -91,21 +91,24 @@ body {
 }
 
 #sidebar-header {
-  padding: 16px 20px 16px 64px;
+  padding: 18px 20px 18px 64px;
   font-weight: 700;
   font-size: 17px;
   letter-spacing: -0.2px;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-panel);
+  border-bottom: 1px solid var(--hairline);
+  background: transparent;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 #sidebar-logo {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  background: var(--color-panel-2);
 }
 
 
@@ -117,34 +120,50 @@ body {
 }
 
 .nav-item {
-  padding: 12px 16px;
-  margin-bottom: 4px;
+  position: relative;
+  padding: 10px 12px;
+  margin-bottom: 2px;
   cursor: pointer;
-  border-radius: var(--radius);
+  border-radius: 10px;
   color: var(--color-text-secondary);
   font-weight: 500;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  transition: var(--transition);
+  font-size: 14px;
+  transition: var(--transition-fast);
   display: flex;
   align-items: center;
   gap: 12px;
   border: 1px solid transparent;
 }
 
+.nav-item::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--gradient-accent);
+  opacity: 0;
+  transform: scaleY(0.5);
+  transform-origin: center;
+  transition: var(--transition-fast);
+}
+
 .nav-item:hover {
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-  border-color: var(--color-accent);
+  background: var(--hover-bg);
+  color: var(--color-text);
 }
 
 .nav-item.active {
   background: var(--color-accent-soft);
   color: var(--color-accent);
   font-weight: 600;
-  border-color: var(--color-accent);
-  box-shadow: var(--color-glow);
+}
+
+.nav-item.active::before {
+  opacity: 1;
+  transform: scaleY(1);
 }
 
 
@@ -181,9 +200,9 @@ body {
 /* Status indicators */
 
 #sidebar-status {
-  border-top: 1px solid var(--color-border);
-  padding: 12px;
-  background: var(--color-panel);
+  border-top: 1px solid var(--hairline);
+  padding: 14px;
+  background: transparent;
 }
 
 .sb-status-row {
@@ -213,15 +232,15 @@ body {
 ================================ */
 
 #header {
-  padding: 16px 24px 16px 64px;
+  padding: 14px 28px 14px 68px;
   background: transparent;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--hairline);
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -273,26 +292,8 @@ body {
 }
 
 .load-btn {
-  background: transparent;
-  border: 1px solid var(--color-accent);
-  color: var(--color-accent);
-  padding: 12px 24px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
+  padding: 11px 24px;
   font-size: 13px;
-  transition: var(--transition);
-}
-
-.load-btn:hover {
-  background: var(--color-accent);
-  color: var(--color-bg);
-  box-shadow: var(--color-glow);
-  transform: translateY(-1px);
-}
-
-.load-btn:active {
-  transform: translateY(0);
 }
 
 /* TOAST — component CSS lives in web/ui/components/Toast/Toast.css */
@@ -543,8 +544,8 @@ input, textarea, select {
   width: 100%;
   padding: 12px 16px;
   background: var(--color-input);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
   color: var(--color-text);
   font-size: 14px;
   font-family: inherit;
@@ -554,8 +555,8 @@ input, textarea, select {
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: var(--color-glow);
-  background: var(--color-accent-soft);
+  box-shadow: 0 0 0 3px var(--color-accent-soft), var(--glow-base);
+  background: var(--color-input);
 }
 
 input::placeholder {
@@ -586,11 +587,11 @@ input[readonly] {
 ================================ */
 
 button {
-  background: transparent;
-  color: var(--color-accent);
-  border: 1px solid var(--color-accent);
-  border-radius: var(--radius);
-  padding: 12px 20px;
+  background: var(--gradient-accent);
+  color: var(--color-contrast);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 11px 22px;
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
@@ -602,46 +603,50 @@ button {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 button:hover {
-  background: var(--color-accent);
-  color: var(--color-contrast);
-  box-shadow: var(--shadow-sm), var(--color-glow);
-  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: var(--shadow-md), var(--glow-base);
+  transform: translateY(-1px);
 }
 
 button:active {
-  transform: translateY(0) scale(0.985);
+  transform: translateY(0) scale(0.97);
 }
 
 button.secondary {
   background: transparent;
-  color: var(--color-muted);
-  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-2);
+  box-shadow: none;
 }
 
 button.secondary:hover {
   background: var(--hover-bg);
-  border-color: var(--color-text);
+  border-color: var(--color-accent);
   color: var(--color-text);
-  box-shadow: none;
+  filter: none;
 }
 
 button.danger {
   background: transparent;
   color: var(--color-danger);
   border: 1px solid var(--color-danger);
+  box-shadow: none;
 }
 
 button.danger:hover {
   background: var(--color-danger);
   color: var(--color-contrast);
+  border-color: var(--color-danger);
   box-shadow: var(--glow-danger);
+  filter: none;
 }
 
 button.small {
-  padding: 8px 14px;
+  padding: 8px 16px;
   font-size: 12px;
 }
 
@@ -671,6 +676,7 @@ button.success:hover {
   background: transparent;
   border: 1px solid var(--color-border-2);
   border-radius: var(--radius-pill);
+  box-shadow: none;
   cursor: pointer;
   position: relative;
   transition: var(--transition);
@@ -850,17 +856,12 @@ body.g-instagram {
 .search-sticky {
   position: sticky;
   top: 0;
-
   z-index: 20;
-
-  padding: 12px 0 16px;
-  margin-bottom: 16px;
-
+  padding: 16px 0 20px;
+  margin-bottom: 20px;
   border-bottom: 1px solid var(--hairline);
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
   background: var(--surface-search-sticky);
 }
 
@@ -885,18 +886,19 @@ body.g-instagram {
 
 .search-icon {
   position: absolute;
-  left: 18px;
+  left: 20px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--color-text-secondary);
   pointer-events: none;
   z-index: 1;
-  transition: color 0.2s ease, filter 0.2s ease;
+  transition: color 0.2s ease, filter 0.2s ease, transform 0.2s ease;
 }
 
 .search-sticky .input-wrapper:focus-within .search-icon {
   color: var(--color-accent);
   filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.6));
+  transform: translateY(-50%) scale(1.08);
 }
 
 /* .search-sticky .controls-row — lives in
@@ -913,10 +915,11 @@ body.g-instagram {
     var(--gradient-accent) border-box;
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 0 0 1px var(--border-search-box), var(--shadow-sm), var(--glow-base);
-  transition: box-shadow 0.25s ease-out, transform 0.25s ease-out;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 0 0 1px var(--border-search-box), var(--shadow-sm), var(--glow-base),
+              inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 #searchBox::placeholder {
@@ -934,7 +937,8 @@ body.g-instagram {
     var(--gradient-accent) border-box;
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
-  box-shadow: 0 0 0 1px var(--color-accent), var(--shadow-lg), var(--glow-multi);
+  box-shadow: 0 0 0 3px var(--color-accent-soft), 0 0 0 1px var(--color-accent),
+              var(--shadow-lg), var(--glow-multi);
   transform: translateY(-1px);
 }
 
@@ -945,14 +949,15 @@ body.g-instagram {
 .search-dropdown {
   position: fixed;
   z-index: 9999;
-  background: var(--surface-search-box);
+  background: var(--surface-search-box-focus);
   border: 1px solid var(--color-border-2);
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
   box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-search-box);
   max-height: 320px;
   overflow-y: auto;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: 6px;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
 }
 
 .hidden { display: none !important; }
@@ -962,7 +967,7 @@ body.g-instagram {
 /* --------END SEARCH DROPDOWN-------------- */
 
 #results {
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
 /* ------------------- Latest finds panel ------------------- */
