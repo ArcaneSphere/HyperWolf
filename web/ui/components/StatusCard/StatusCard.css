@@ -45,9 +45,9 @@
 .card-header {
   padding: 12px 16px;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   color: var(--syn-function);
   border-bottom: 1px solid var(--color-border);
   background: transparent;

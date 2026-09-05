@@ -60,7 +60,7 @@ export const UpdatesAndNews = () => {
   const icon = document.createElement("span");
   icon.textContent = "✅";
   const label = document.createElement("span");
-  label.textContent = "You're on the latest version (0.10.0)";
+  label.textContent = "You're on the latest version (0.11.0)";
   msg.append(icon, label);
   return UI.SearchCard({
     className: "live-info",
