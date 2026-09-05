@@ -160,6 +160,13 @@ De `subjectTokenRules`-scan (rule-subject i.p.v. elk klasse-voorkomen) toonde 11
 2. **Onderhoud registered:** regelrechtende loop aan nieuwe `npm run check` binding; een nieuwe component moet de canonical-ownership-checks sluitend houden.
 3. Doorlooptijd/onderhoud: versie bumps via `internal/buildinfo/version.go` + web-fallbacks (`web/index.html #hw-version`, `web/search.js currentAppVersion`, SearchCard-story-tekst, README).
 
+**Roadmap — backend LLM-readiness (opgenomen, niet nu):**
+- Root-`AGENTS.md`: verken-volgorde van backend-modules, build/check/fix-workflow, relatie tot `hypergnomon_src` + `apply_fork_patch.py`.
+- Architectuurdoc voor `internal/` (daemon/handler/router/hub, state, tela, tray): dataflow verbindings- en start-ups.
+- Indexer-domeindoc: heights/SCIDs/classify-probe/FastSync, gnomon_ws, postscan-vars, DB-bewaarformaat (offline reads).
+- Router/update-check + versie-flow (buildinfo single source) expliciet maken.
+- Overweging: `CLAUDE.md`-afgeleide (zie `hypergnomon_src/`) óók voor de HyperWolf-wraplaag; dan is de hele app in één vocabulaire beschreven.
+
 ---
 
 ## 9. Belangrijke bestanden (huidige staat)
