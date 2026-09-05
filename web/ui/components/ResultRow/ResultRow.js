@@ -78,7 +78,11 @@
       };
     });
 
-    content.append(urlEl, nameEl, scidEl, descrEl, ratingEl);
+    const chainEl = document.createElement("div");
+    chainEl.className = "chain-badge";
+    chainEl.textContent = "⛓ DERO";
+
+    content.append(urlEl, nameEl, scidEl, chainEl, descrEl, ratingEl);
 
     const bookmarkBtn = document.createElement("button");
     bookmarkBtn.className = "result-bookmark";

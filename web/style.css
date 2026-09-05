@@ -165,7 +165,7 @@ body {
 .nav-badge {
   margin-left: auto;
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-contrast);
   font-size: 11px;
   font-weight: 700;
   padding: 1px 6px;
@@ -772,7 +772,7 @@ html[data-theme="light"] .theme-toggle-slider {
 .theme-mode-option.active {
   background: var(--gradient-accent);
   border-color: transparent;
-  color: #fff;
+  color: var(--color-contrast);
   box-shadow: 0 0 12px rgba(167, 139, 250, 0.35);
 }
 
@@ -974,7 +974,7 @@ body.g-instagram {
 
 .latest-finds-new {
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--color-contrast);
   font-size: 12px;
   font-weight: 700;
   padding: 2px 10px;
@@ -1760,3 +1760,17 @@ body.g-instagram {
 /* .log-container + controls + auto-scroll + dark variant — canonical
    owner is web/ui/components/LogContainer/LogContainer.css
    (.log-empty/.log-entry family — LogEntry.css) */
+
+/* ============================================================
+   GLOBAL COLOR SYSTEM — focus rings, selection, contrast
+   (values live in web/tokens.css)
+   ============================================================ */
+
+::selection {
+  background: var(--highlight);
+}
+
+:where(a[href], button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--ring-focus-color);
+  outline-offset: 2px;
+}

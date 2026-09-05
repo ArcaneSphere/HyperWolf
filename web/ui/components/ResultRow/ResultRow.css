@@ -262,3 +262,30 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
   .result           { padding: 16px 12px; gap: 12px; }
   .result .icon-slot { width: 40px; height: 40px; }
 }
+
+
+/* =================== Category / chain tags =================== */
+.result .chain-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--badge-chain);
+  background: var(--badge-chain-soft);
+  border: 1px solid var(--badge-chain);
+  padding: 2px 9px 3px;
+  border-radius: var(--radius-sm);
+  margin: 0 0 8px;
+  box-shadow: 0 0 10px var(--badge-chain-soft);
+}
+
+.result.keyboard-selected .chain-badge {
+  color: var(--badge-height);
+  border-color: var(--badge-height);
+  background: var(--badge-height-soft);
+}

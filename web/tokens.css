@@ -12,16 +12,16 @@
    ============================================================ */
 :root {
   /* Background layers */
-  --color-bg: #0a0e1a;
-  --color-panel: #10152a;
-  --color-panel-2: #161d38;
-  --color-input: #0c1122;
-  --color-input-bg: #0c1122;  /* alias for progress-bar */
+  --color-bg: #080b16;
+  --color-panel: #0d1327;
+  --color-panel-2: #151d3a;
+  --color-input: #0a0f1f;
+  --color-input-bg: #0a0f1f;  /* alias for progress-bar */
 
   /* Text */
-  --color-text: #e6ecff;
-  --color-text-secondary: #94a3b8;
-  --color-muted: #718096;
+  --color-text: #e7edff;
+  --color-text-secondary: #9aa9c7;
+  --color-muted: #72819d;
 
   /* Borders */
   --color-border: rgba(148, 163, 184, 0.14);
@@ -65,6 +65,31 @@
 
   /* Status tints (log-level pills) */
   --color-success-soft: rgba(74, 222, 128, 0.14);
+
+  /* ---- Semantic aliases & role colors ---- */
+  --color-primary: var(--color-accent);
+  --color-primary-hover: var(--color-accent-hover);
+  --color-primary-soft: var(--color-accent-soft);
+
+  /* Text on top of accent gradients / solid chips */
+  --color-contrast: #ffffff;
+
+  /* Focus ring + text selection (vibrant, high-visibility) */
+  --ring-focus-color: #22d3ee;
+  --highlight: rgba(34, 211, 238, 0.20);
+
+  /* Generic hover fill for flat interactive rows */
+  --hover-bg: rgba(148, 163, 184, 0.08);
+
+  /* Chain / height / rss / app badges (syntax-hued tags) */
+  --badge-chain: #7ce0f9;
+  --badge-chain-soft: rgba(124, 224, 249, 0.16);
+  --badge-height: #ffb86c;
+  --badge-height-soft: rgba(255, 184, 108, 0.16);
+  --badge-rss: #ffd173;
+  --badge-rss-soft: rgba(255, 209, 115, 0.16);
+  --badge-app: #c792ea;
+  --badge-app-soft: rgba(199, 146, 234, 0.16);
 }
 
 /* ============================================================
@@ -111,6 +136,23 @@
   --color-star-active: var(--color-gold);
 
   --placeholder: rgba(100, 116, 139, 0.6);
+
+  --color-primary: var(--color-accent);
+  --color-primary-hover: var(--color-accent-hover);
+  --color-primary-soft: var(--color-accent-soft);
+  --color-contrast: #ffffff;
+  --ring-focus-color: #0ea5e9;
+  --highlight: rgba(2, 132, 199, 0.16);
+  --hover-bg: rgba(15, 23, 42, 0.05);
+
+  --badge-chain: #0e7490;
+  --badge-chain-soft: rgba(14, 116, 144, 0.12);
+  --badge-height: #b45309;
+  --badge-height-soft: rgba(180, 83, 9, 0.12);
+  --badge-rss: #a16207;
+  --badge-rss-soft: rgba(161, 98, 7, 0.12);
+  --badge-app: #7c3aed;
+  --badge-app-soft: rgba(124, 58, 237, 0.12);
 }
 
 /* ============================================================
@@ -381,9 +423,9 @@
    ============================================================ */
 :root {
   /* Default: editor-style color blooms over the deep navy base */
-  --gradient-default: radial-gradient(1100px 560px at 12% -8%, rgba(167, 139, 250, 0.14), transparent 60%),
-                      radial-gradient(900px 520px at 88% 112%, rgba(34, 211, 238, 0.12), transparent 60%),
-                      radial-gradient(700px 420px at 50% 120%, rgba(244, 114, 182, 0.08), transparent 60%),
+  --gradient-default: radial-gradient(1100px 560px at 12% -8%, rgba(167, 139, 250, 0.18), transparent 62%),
+                      radial-gradient(900px 520px at 88% 112%, rgba(34, 211, 238, 0.15), transparent 62%),
+                      radial-gradient(700px 420px at 50% 120%, rgba(244, 114, 182, 0.10), transparent 62%),
                       var(--color-bg);
 
   /* Gradient presets (settings picker) */
