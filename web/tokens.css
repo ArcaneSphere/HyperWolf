@@ -11,6 +11,8 @@
    COLOR — Dark Palette (default)
    ============================================================ */
 :root {
+  color-scheme: dark;
+
   /* Background layers */
   --color-bg: #080b16;
   --color-panel: #0d1327;
@@ -96,6 +98,8 @@
    COLOR — Light Theme Overrides
    ============================================================ */
 [data-theme="light"] {
+  color-scheme: light;
+
   --color-bg: #eef1f8;
   --color-panel: #ffffff;
   --color-panel-2: #e8ecf6;
@@ -266,15 +270,15 @@
    SHADOWS & GLOWS
    ============================================================ */
 :root {
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.55);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 2px rgba(2, 6, 18, 0.35), 0 1px 6px rgba(2, 6, 18, 0.22);
+  --shadow-md: 0 2px 8px rgba(2, 6, 18, 0.35), 0 10px 24px rgba(2, 6, 18, 0.28);
+  --shadow-lg: 0 4px 16px rgba(2, 6, 18, 0.32), 0 20px 48px rgba(2, 6, 18, 0.30);
   --color-glow: 0 0 12px rgba(34, 211, 238, 0.35);
 }
 [data-theme="light"] {
-  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.08);
-  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.12);
-  --shadow-lg: 0 8px 32px rgba(15, 23, 42, 0.16);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 6px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 2px 8px rgba(15, 23, 42, 0.07), 0 10px 24px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 4px 16px rgba(15, 23, 42, 0.08), 0 20px 48px rgba(15, 23, 42, 0.10);
   --color-glow: 0 0 12px rgba(2, 132, 199, 0.20);
 }
 
@@ -386,9 +390,12 @@
   --ease-out: ease-out;
   --ease-in-out: ease-in-out;
   --ease-spring: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 
-  /* Transition shorthand (legacy) */
-  --transition: all 0.3s ease;
+  /* Transition shorthands */
+  --transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  --transition-fast: all 0.15s ease-out;
+  --transition-slow: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 /* ============================================================

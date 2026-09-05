@@ -15,6 +15,13 @@
 
   if (!searchBox || !resultsEl) return;
 
+  // Central status writer — toggles a live spinner for loading phases.
+  function setStatus(text) {
+    statusEl.textContent = text;
+    const busy = /\u23f3|Loading|Ratings|probing|Waiting/i.test(text || "");
+    statusEl.classList.toggle("is-loading", busy);
+  }
+
   // Move suggestions dropdown outside #content to body so it's never clipped
   const searchSuggestions = document.getElementById("searchSuggestions");
   if (searchSuggestions) {
@@ -213,7 +220,7 @@
     fullLoadInProgress = true;
     resultsLoaded = false;
     try {
-      statusEl.textContent = "⏳ Loading apps...";
+      setStatus("⏳ Loading apps...");
       resultsEl.replaceChildren();
 
       try {
@@ -237,7 +244,7 @@
             ignoreLocation: true
           });
           refreshResults();
-          statusEl.textContent = `✅ Loaded ${allResults.length} apps (direct)`;
+          setStatus(`✅ Loaded ${allResults.length} apps (direct)`);
         }
       } catch (e) {
         console.warn("Direct discovery failed", e);
@@ -280,7 +287,7 @@
           }
         }
         fuse.setCollection(allResults);
-        statusEl.textContent = `✅ Loaded ${allResults.length} apps`;
+        setStatus(`✅ Loaded ${allResults.length} apps`);
         refreshResults();
       }
 
@@ -303,13 +310,13 @@
               }
             }
             if (token === loadToken) {
-              statusEl.textContent = `Ratings ${Math.min(index, scids.length)} / ${scids.length}...`;
+              setStatus(`Ratings ${Math.min(index, scids.length)} / ${scids.length}...`);
             }
           }
         }
         await Promise.all(Array(concurrency).fill().map(worker));
         fuse.setCollection(allResults);
-        statusEl.textContent = `✅ Loaded ${allResults.length} apps`;
+        setStatus(`✅ Loaded ${allResults.length} apps`);
         refreshResults();
       }
 
@@ -317,7 +324,7 @@
 
       const missing = allResults.filter(r => r.likes === 0 && r.dislikes === 0 && r.average === 0);
       if (missing.length > 0) {
-        statusEl.textContent = `Fallback ratings (daemon) ${missing.length} apps...`;
+        setStatus(`Fallback ratings (daemon) ${missing.length} apps...`);
         try {
           const resp = await fetch("/api/tela/vars", {
             method: "POST",
@@ -339,7 +346,7 @@
               }
             }
             fuse.setCollection(allResults);
-            statusEl.textContent = `✅ Loaded ${allResults.length} apps`;
+            setStatus(`✅ Loaded ${allResults.length} apps`);
             refreshResults();
           }
         } catch (e) {
@@ -355,14 +362,14 @@
 
       // Honest status: an empty catalog usually means "still syncing", not done.
       if (statusEl) {
-        statusEl.textContent = allResults.length > 0
+        setStatus(allResults.length > 0
           ? `✅ Loaded ${allResults.length} apps`
-          : waitingStatusText();
+          : waitingStatusText());
       }
     } catch (err) {
       if (token !== loadToken) return;
       console.error("Error loading SCIDs:", err);
-      statusEl.textContent = "❌ Failed loading apps – is HyperGnomon running?";
+      setStatus("❌ Failed loading apps – is HyperGnomon running?");
       const retry = document.createElement("button");
       retry.className = "retry-btn";
       retry.textContent = "↻ Retry";
@@ -442,9 +449,9 @@
       detectNewSCIDs(allResults.map(r => ({ scid: r.scid })));
       updateLatestFinds();
       if (statusEl) {
-        statusEl.textContent = allResults.length > 0
+        setStatus(allResults.length > 0
           ? `✅ ${allResults.length} TELA app${allResults.length !== 1 ? "s" : ""}`
-          : waitingStatusText();
+          : waitingStatusText());
       }
     } catch (e) {
       console.warn("Catalog refresh failed", e);
@@ -514,7 +521,7 @@
 
   function showCleanState() {
     resultsEl.replaceChildren();
-    statusEl.textContent = "";
+    setStatus("");
   }
 
   function refreshResults() {
@@ -543,9 +550,9 @@
     // Always update status so the user sees the true total and filtered count,
     // never a stale value from an earlier loading phase.
     if (filteredCount < totalCount) {
-      statusEl.textContent = `✅ ${totalCount} TELA apps · showing ${filteredCount}`;
+      setStatus(`✅ ${totalCount} TELA apps · showing ${filteredCount}`);
     } else {
-      statusEl.textContent = `✅ ${totalCount} TELA app${totalCount !== 1 ? 's' : ''}`;
+      setStatus(`✅ ${totalCount} TELA app${totalCount !== 1 ? 's' : ''}`);
     }
     if (!filtered.length) {
       const q = (searchBox.value || "").trim();
@@ -750,7 +757,7 @@
   });
 
   document.addEventListener("nodeConnected", async () => {
-    if (statusEl) statusEl.textContent = "⏳ Loading apps...";
+    if (statusEl) setStatus("⏳ Loading apps...");
     searchBox.disabled = false;
     metadataRetries = 0;
     await loadSearchSCIDs();
