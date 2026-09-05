@@ -548,7 +548,16 @@
       statusEl.textContent = `✅ ${totalCount} TELA app${totalCount !== 1 ? 's' : ''}`;
     }
     if (!filtered.length) {
-      const msg = document.createElement("div"); msg.className = "no-results"; msg.textContent = "No results found";
+      const q = (searchBox.value || "").trim();
+      const msg = document.createElement("div");
+      msg.className = "no-results";
+      const title = document.createElement("div");
+      title.className = "no-results-title";
+      title.textContent = q ? "No matches for “" + q + "” in the catalog" : "No results found";
+      const hint = document.createElement("div");
+      hint.className = "no-results-hint";
+      hint.textContent = "try another query — scan the full SCID catalog";
+      msg.append(title, hint);
       resultsEl.appendChild(msg);
       return;
     }
@@ -806,7 +815,7 @@
   const rssFeedUpdated = document.getElementById("rss-feed-updated");
   
   // State
-  let currentAppVersion = "0.10.0";
+  let currentAppVersion = "0.11.0";
   let rssFeedUrl = "https://dero.world/anotherworld/feed/";
   let updateCheckEnabled = true;
   let rssRefreshInterval = null;

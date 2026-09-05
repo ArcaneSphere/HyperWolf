@@ -1,38 +1,82 @@
 /* ============================================================
    ResultRow.css
    Canonical owner of the .result / .url / .nameHdr / .scid /
-   .descr / .rating / .icon-slot / .result-bookmark rules (were
-   removed from style.css during the dependency dedupe).
-   Shared classes (.url, .nameHdr) also used by LatestFindItem.
+   .descr / .rating / .icon-slot / .result-bookmark / .result
+   .clicking rules (were removed from style.css during the
+   dependency dedupe).  Shared classes (.url, .nameHdr) also used
+   by LatestFindItem.
+   Search-page treatment: lively cards with accent strip, hover
+   lift + glow, icon motion, staggered entrance animation.
    ============================================================ */
 
 .result {
-  border-bottom: 1px solid var(--hairline);
-  padding: 20px 16px;
+  position: relative;
+  border: 1px solid var(--hairline);
+  padding: 24px 18px;
   display: flex;
   gap: 16px;
   transition: var(--transition);
   cursor: pointer;
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   background: var(--surface-result);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  animation: result-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.result::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gradient-accent);
+  opacity: 0.55;
+  transition: opacity 0.25s ease, height 0.25s ease;
+}
+
+.result:hover::before,
+.result.keyboard-selected::before {
+  opacity: 1;
+  height: 3px;
 }
 
 [data-theme="light"] .result {
-  border-bottom-color: var(--hairline);
+  border-color: var(--hairline);
   background: var(--surface-result);
+}
+
+/* Staggered entrance — space below stays stable across re-renders */
+.result:nth-child(1)  { animation-delay: 0.03s; }
+.result:nth-child(2)  { animation-delay: 0.07s; }
+.result:nth-child(3)  { animation-delay: 0.11s; }
+.result:nth-child(4)  { animation-delay: 0.15s; }
+.result:nth-child(5)  { animation-delay: 0.19s; }
+.result:nth-child(6)  { animation-delay: 0.23s; }
+.result:nth-child(7)  { animation-delay: 0.27s; }
+.result:nth-child(8)  { animation-delay: 0.31s; }
+.result:nth-child(9)  { animation-delay: 0.35s; }
+.result:nth-child(10) { animation-delay: 0.39s; }
+
+@keyframes result-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result { animation: none; }
 }
 
 /* Mouse hover only when NOT keyboard navigating */
 body:not(.keyboard-nav) .result:hover,
 .result.keyboard-selected {
-  background: var(--color-panel);
-  margin: 0 -16px;
-  padding: 20px 16px;
-  border-radius: var(--radius);
+  background: linear-gradient(90deg, var(--color-accent-soft), transparent 14%), var(--color-panel);
   border-color: var(--color-accent);
+  box-shadow: var(--shadow-md), var(--color-glow);
+  transform: translateY(-2px);
 }
 
 /* Dark mode glow */
@@ -53,6 +97,7 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
   z-index: 2;
 }
 
+/* =================== Icon slot =================== */
 .result .icon-slot {
   width: 48px;
   height: 48px;
@@ -65,17 +110,38 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
   border-radius: var(--radius-lg);
   display: block;
   object-fit: cover;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--syn-constant-soft);
+  box-shadow: 0 0 0 1px var(--border-search-box), var(--shadow-sm);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
+.result:hover .icon-slot .icon,
+.result.keyboard-selected .icon-slot .icon {
+  transform: scale(1.06);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--border-search-box), 0 0 12px var(--color-glow);
+}
+
+/* Container holding the icon */
+.icon-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--scid-size, 48px);
+  height: var(--scid-size, 48px);
+  position: relative;
+}
+
+/* =================== Content column =================== */
 .result .content {
   flex: 1;
   min-width: 0;
 }
 
 .url {
+  display: block;
   font-size: 12px;
-  color: var(--color-accent);
+  color: var(--syn-function);
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -94,20 +160,35 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
 }
 
 .nameHdr:hover {
-  color: var(--color-accent);
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
+/* SCID as a mono code-chip */
 .scid {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 12px;
-  color: var(--color-text-secondary);
+  color: var(--syn-string);
+  background: var(--syn-string-soft);
+  border: 1px solid var(--syn-string);
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
   cursor: pointer;
-  font-family: 'Courier New', monospace;
-  margin-bottom: 8px;
+  margin: 0 0 10px;
   transition: var(--transition);
 }
 
 .scid:hover {
-  color: var(--color-accent);
+  color: var(--syn-class);
+  border-color: var(--syn-class);
+  box-shadow: 0 0 10px var(--syn-string-soft);
 }
 
 .descr {
@@ -115,33 +196,28 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
   line-height: 1.6;
   color: var(--color-text-secondary);
   margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
+/* Rating as a colored pill */
 .rating {
+  display: inline-block;
   margin-top: 8px;
-  font-size: 12px;
-  color: var(--color-muted);
-  font-weight: 500;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--syn-number);
+  background: var(--syn-number-soft);
+  border: 1px solid var(--syn-number);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
 }
 
-/* Container holding the icon */
-.icon-slot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--scid-size, 48px);
-  height: var(--scid-size, 48px);
-  position: relative;
-}
-
-@keyframes card-click-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-.result.clicking {
-  animation: card-click-pulse 0.4s ease 1;
-}
-
+/* =================== Bookmark =================== */
 .result-bookmark {
   align-self: flex-start;
   margin-top: 4px;
@@ -166,24 +242,23 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
   text-shadow: 0 0 6px var(--color-accent);
 }
 
-@media (max-width: 1024px) {
-  .nameHdr {
-    font-size: 16px;
-  }
+/* =================== Click feedback =================== */
+@keyframes card-click-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
 
-  .descr {
-    font-size: 13px;
-  }
+.result.clicking {
+  animation: card-click-pulse 0.4s ease 1;
+}
+
+/* =================== Responsive =================== */
+@media (max-width: 1024px) {
+  .nameHdr { font-size: 16px; }
+  .descr   { font-size: 13px; }
 }
 
 @media (max-width: 768px) {
-  .result {
-    padding: 16px 12px;
-    gap: 12px;
-  }
-
-  .result .icon-slot {
-    width: 40px;
-    height: 40px;
-  }
+  .result           { padding: 16px 12px; gap: 12px; }
+  .result .icon-slot { width: 40px; height: 40px; }
 }

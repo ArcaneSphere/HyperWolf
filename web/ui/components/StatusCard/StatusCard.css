@@ -17,16 +17,29 @@
 }
 
 .status-card {
+  position: relative;
   background: var(--color-panel);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-2);
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: var(--transition);
 }
 
+.status-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gradient-accent);
+  opacity: 0.85;
+  z-index: 1;
+}
+
 .status-card:hover {
   border-color: var(--color-accent);
-  box-shadow: var(--color-glow);
+  box-shadow: var(--shadow-md), var(--color-glow);
 }
 
 .card-header {
@@ -35,7 +48,7 @@
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--color-accent);
+  color: var(--syn-function);
   border-bottom: 1px solid var(--color-border);
   background: transparent;
 }
@@ -60,7 +73,7 @@
 .card-value {
   color: var(--color-text);
   font-weight: 600;
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   overflow-wrap: break-word;
   word-break: break-all;

@@ -654,14 +654,14 @@ button.success:hover {
 }
 
 /* ===============================
-   THEME TOGGLE
+   THEME TOGGLE (System / Dark / Light)
 ================================ */
 
 .theme-toggle {
   width: 80px;
   height: 40px;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-2);
   border-radius: var(--radius-pill);
   cursor: pointer;
   position: relative;
@@ -679,7 +679,8 @@ button.success:hover {
 .theme-toggle-slider {
   width: 32px;
   height: 32px;
-  background: var(--color-accent);
+  background: linear-gradient(135deg, var(--color-panel-2), var(--color-panel));
+  border: 1px solid var(--color-border-2);
   border-radius: 50%;
   position: absolute;
   left: 4px;
@@ -687,29 +688,92 @@ button.success:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-bg);
-  box-shadow: var(--color-glow);
+  color: var(--color-accent);
+  box-shadow: var(--shadow-sm);
 }
 
+/* resolved theme positions */
+:root[data-theme="light"] .theme-toggle-slider,
+html[data-theme="light"] .theme-toggle-slider {
+  left: 4px;
+}
 [data-theme="dark"] .theme-toggle-slider {
   left: 44px;
+}
+[data-theme-mode="system"] .theme-toggle-slider {
+  left: 24px;
 }
 
 .theme-icon {
   position: absolute;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.moon-icon {
+.moon-icon,
+.monitor-icon {
   opacity: 0;
+  transform: scale(0.6);
 }
 
-[data-theme="dark"] .sun-icon {
+[data-theme="dark"] .sun-icon,
+[data-theme="dark"] .monitor-icon {
   opacity: 0;
+  transform: scale(0.6);
 }
-
 [data-theme="dark"] .moon-icon {
   opacity: 1;
+  transform: scale(1);
+}
+
+[data-theme="light"] .moon-icon,
+[data-theme="light"] .monitor-icon {
+  opacity: 0;
+  transform: scale(0.6);
+}
+[data-theme="light"] .sun-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+[data-theme-mode="system"] .sun-icon,
+[data-theme-mode="system"] .moon-icon {
+  opacity: 0.35;
+  transform: scale(0.72);
+}
+[data-theme-mode="system"] .monitor-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Settings page: System / Dark / Light pills
+   (page-chrome — owned by no component) */
+.theme-mode-options {
+  display: flex;
+  gap: 6px;
+}
+
+.theme-mode-option {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border-2);
+  background: var(--color-input);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.theme-mode-option:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.theme-mode-option.active {
+  background: var(--gradient-accent);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.35);
 }
 
 /* CONTROLS ROW — .controls-row/.controls/.control-group/#minRating/
@@ -807,53 +871,63 @@ body.g-instagram {
 }
 
 .search-sticky .input-wrapper {
-  max-width: 560px;
-  flex: 0 1 560px;
+  max-width: var(--search-max-width);
+  flex: 0 1 var(--search-max-width);
 }
 
 .search-icon {
   position: absolute;
-  left: 14px;
+  left: 18px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--color-text-secondary);
   pointer-events: none;
   z-index: 1;
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, filter 0.2s ease;
 }
 
 .search-sticky .input-wrapper:focus-within .search-icon {
   color: var(--color-accent);
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.6));
 }
 
 /* .search-sticky .controls-row — lives in
    web/ui/components/SearchControlsRow/SearchControlsRow.css */
 
 #searchBox {
-  padding: 14px 20px 14px 44px;
-  font-size: 15px;
+  padding: var(--search-pill-padding);
+  font-size: 16px;
+  font-weight: 500;
   border-radius: var(--radius-xl);
-  border: 1px solid var(--border-search-box);
-  background: var(--surface-search-box);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease-out, border-color 0.2s ease-out, background 0.2s ease-out;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--surface-search-box), var(--surface-search-box)) padding-box,
+    var(--gradient-accent) border-box;
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 0 0 1px var(--border-search-box), var(--shadow-sm), var(--glow-base);
+  transition: box-shadow 0.25s ease-out, transform 0.25s ease-out;
+}
+
+#searchBox::placeholder {
+  color: var(--placeholder);
+}
+
+#searchBox:hover,
+[data-theme="light"] #searchBox:hover {
+  box-shadow: 0 0 0 1px var(--border-search-box), var(--shadow-md), var(--glow-strong);
 }
 
 #searchBox:focus {
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-md), var(--color-glow);
-  background: var(--surface-search-box-focus);
-}
-
-[data-theme="light"] #searchBox {
-  border-color: var(--border-search-box);
-  background: var(--surface-search-box);
-}
-
-[data-theme="light"] #searchBox:focus {
-  background: var(--surface-search-box-focus);
+  background:
+    linear-gradient(var(--surface-search-box-focus), var(--surface-search-box-focus)) padding-box,
+    var(--gradient-accent) border-box;
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 0 0 1px var(--color-accent), var(--shadow-lg), var(--glow-multi);
+  transform: translateY(-1px);
 }
 
 /* ===============================
@@ -863,14 +937,14 @@ body.g-instagram {
 .search-dropdown {
   position: fixed;
   z-index: 9999;
-  background: var(--color-panel);
+  background: var(--surface-search-box);
   border: 1px solid var(--color-border-2);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-search-box);
   max-height: 320px;
   overflow-y: auto;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .hidden { display: none !important; }
@@ -899,13 +973,14 @@ body.g-instagram {
 }
 
 .latest-finds-new {
-  background: var(--color-accent);
+  background: var(--gradient-accent);
   color: #fff;
   font-size: 12px;
   font-weight: 700;
   padding: 2px 10px;
   border-radius: var(--radius-pill);
   white-space: nowrap;
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.4);
 }
 
 /* .search-card .latest-find-item compact rows — live in
@@ -927,6 +1002,10 @@ body.g-instagram {
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--hairline);
   transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
 }
 
 [data-theme="light"] #search-status {
@@ -1552,6 +1631,10 @@ body.g-instagram {
 
   [data-theme="dark"] .theme-toggle-slider {
     left: 38px;
+  }
+
+  [data-theme-mode="system"] .theme-toggle-slider {
+    left: 21px;
   }
 
   h2 {

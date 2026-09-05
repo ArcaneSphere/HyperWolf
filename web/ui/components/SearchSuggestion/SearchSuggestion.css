@@ -21,24 +21,25 @@
 
 .search-suggestion:hover,
 .search-suggestion.selected {
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
+  background: var(--syn-function-soft);
+  color: var(--color-text);
 }
 
 .search-suggestion .durl {
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-accent);
+  color: var(--syn-function);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-mono);
 }
 
 .search-suggestion .meta {
   font-size: 11px;
-  color: var(--color-text-secondary);
-  font-family: monospace;
-  opacity: 0.7;
+  color: var(--syn-comment);
+  font-family: var(--font-mono);
+  opacity: 0.8;
 }
 
 [data-theme="dark"] .search-suggestion:hover,
@@ -47,7 +48,7 @@
 }
 
 .search-suggestion.selected {
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-  border-left: 2px solid var(--color-accent);
+  background: var(--syn-selector-soft);
+  color: var(--color-text);
+  border-left: 2px solid var(--syn-selector);
 }

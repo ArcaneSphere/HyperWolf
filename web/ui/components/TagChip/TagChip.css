@@ -10,13 +10,13 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: var(--color-panel-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xs);
-  padding: 2px 8px;
+  background: var(--syn-keyword-soft);
+  border: 1px solid var(--syn-keyword);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
   font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text);
+  font-weight: 600;
+  color: var(--syn-keyword);
 }
 
 .tag-chip .tag-remove {

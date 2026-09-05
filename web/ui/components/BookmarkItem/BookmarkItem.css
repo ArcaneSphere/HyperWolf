@@ -46,7 +46,7 @@
 .bookmark-value {
   color: var(--color-text-secondary);
   font-size: 13px;
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-mono);
   overflow: hidden;
   text-overflow: ellipsis;
 }

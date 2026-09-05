@@ -28,6 +28,7 @@
 }
 
 .search-card {
+  position: relative;
   background: var(--surface-search-card);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -38,6 +39,18 @@
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-search-card);
+}
+
+.search-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gradient-accent);
+  opacity: 0.9;
+  z-index: 1;
 }
 
 [data-theme="dark"] .search-card,
@@ -57,7 +70,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--color-text);
+  color: var(--syn-function);
   border: none;
 }
 

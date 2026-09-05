@@ -1,12 +1,48 @@
 /* ============================================================
    NoResults.css
-   Canonical owner of the .no-results rule (was removed from
-   style.css during the dependency dedupe).
+   Canonical owner of the .no-results empty-state card plus the
+   .no-results-title / .no-results-hint lines rendered by the
+   Search page when a query yields no matches.  (The base .no-result
+   rule was removed from style.css during the dependency dedupe.)
    ============================================================ */
 
 .no-results {
+  position: relative;
   text-align: center;
-  padding: 60px 20px;
-  color: var(--color-muted);
+  padding: 64px 24px;
+  margin: 8px 0;
   font-size: 15px;
+  color: var(--color-muted);
+  background: var(--surface-result);
+  border: 1px dashed var(--color-border-2);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: result-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.no-results::before {
+  content: "⌗";
+  display: block;
+  font-size: 34px;
+  line-height: 1;
+  margin-bottom: 14px;
+  font-family: var(--font-mono);
+  color: var(--syn-comment);
+}
+
+.no-results .no-results-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.no-results .no-results-hint {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .no-results { animation: none; }
 }

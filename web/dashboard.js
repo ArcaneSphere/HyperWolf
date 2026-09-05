@@ -101,34 +101,58 @@ window.getHiddenExtensions = () => {
     .filter(Boolean);
 };
 
-// ================= THEME =================
-const savedTheme = localStorage.getItem("theme") || "dark";
-document.documentElement.setAttribute("data-theme", savedTheme);
+// ================= THEME (System / Dark / Light) =================
+const THEME_MODE_KEY = "hyperwolf.themeMode";
+const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+const themeModeOptions = document.querySelectorAll(".theme-mode-option");
 
-const settingThemeToggle = document.getElementById("setting-theme-toggle");
-
-function syncThemeUI(theme) {
-  if (settingThemeToggle) settingThemeToggle.checked = theme === "dark";
+function resolveTheme(mode) {
+  if (mode === "dark" || mode === "light") return mode;
+  return prefersDark.matches ? "dark" : "light";
 }
 
-function setTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-  localStorage.setItem("theme", theme);
-  syncThemeUI(theme);
+function themeModeLabel(mode) {
+  if (mode === "system") return "Theme: System (follows OS)";
+  return `Theme: ${mode[0].toUpperCase() + mode.slice(1)}`;
 }
 
-syncThemeUI(savedTheme);
-
-themeToggle.onclick = () => {
-  const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
-  setTheme(next);
-};
-
-if (settingThemeToggle) {
-  settingThemeToggle.addEventListener("change", () => {
-    setTheme(settingThemeToggle.checked ? "dark" : "light");
+function applyThemeMode(mode) {
+  const resolved = resolveTheme(mode);
+  document.documentElement.setAttribute("data-theme", resolved);
+  document.documentElement.setAttribute("data-theme-mode", mode);
+  localStorage.setItem(THEME_MODE_KEY, mode);
+  themeToggle.title = `${themeModeLabel(mode)} — click to change`;
+  themeToggle.setAttribute("aria-label", themeModeLabel(mode));
+  themeToggle.dataset.mode = mode;
+  themeModeOptions.forEach((btn) => {
+    const active = btn.dataset.themeMode === mode;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-pressed", String(active));
   });
 }
+
+const legacyTheme = localStorage.getItem("theme");
+const initialMode =
+  localStorage.getItem(THEME_MODE_KEY) ||
+  (legacyTheme === "dark" || legacyTheme === "light" ? legacyTheme : "system");
+applyThemeMode(initialMode);
+
+prefersDark.addEventListener("change", () => {
+  if ((localStorage.getItem(THEME_MODE_KEY) || "system") === "system") {
+    applyThemeMode("system");
+  }
+});
+
+themeToggle.onclick = () => {
+  const order = ["system", "dark", "light"];
+  const cur = localStorage.getItem(THEME_MODE_KEY) || "system";
+  const next = order[(order.indexOf(cur) + 1) % order.length];
+  applyThemeMode(next);
+};
+
+themeModeOptions.forEach((btn) => {
+  btn.addEventListener("click", () => applyThemeMode(btn.dataset.themeMode));
+});
 
 // ================= NAV =================
 // ================= SIDEBAR OVERLAY =================
