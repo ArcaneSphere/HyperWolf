@@ -1,0 +1,15 @@
+{
+  "name": "hyperwolf-web-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "devDependencies": {
+    "storybook": "^8.4.2",
+    "@storybook/html": "^8.4.2",
+    "@storybook/html-vite": "^8.4.2",
+    "@storybook/addon-docs": "^8.4.2"
+  }
+}
