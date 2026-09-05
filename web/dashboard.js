@@ -197,9 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
  * @returns {HTMLElement} A <span> element with class "status-dot {state}"
  */
 function createDot(state) {
-  const span = document.createElement("span");
-  span.className = "status-dot " + state;
-  return span;
+  return UI.StatusDot(state);
 }
 
 /**
@@ -238,10 +236,7 @@ function setStatus(el, running, okText = "Running", failText = "Stopped") {
  * @returns {HTMLElement} A div with class "no-results"
  */
 function createNoResults(text) {
-  const div = document.createElement("div");
-  div.className = "no-results";
-  div.textContent = text;
-  return div;
+  return UI.NoResults(text);
 }
 
 // ================= TOAST NOTIFICATIONS =================
@@ -255,17 +250,7 @@ function createNoResults(text) {
  */
 function pushToast(state, message) {
   if (!statusEl) return;
-  const toast = document.createElement("div");
-  toast.className = "toast toast-" + state;
-  const dot = createDot(state);
-  const msg = document.createElement("span");
-  msg.className = "toast-msg";
-  msg.textContent = message;
-  const close = document.createElement("button");
-  close.className = "toast-close";
-  close.textContent = "✕";
-  close.onclick = () => dismissToast(toast);
-  toast.append(dot, msg, close);
+  const toast = UI.Toast(state, message, (t) => dismissToast(t));
   statusEl.appendChild(toast);
   const maxVisible = 5;
   while (statusEl.children.length > maxVisible) {
@@ -461,7 +446,7 @@ async function updateStatusIndicators() {
       }
       // Update search page status card
       const scXswd = document.getElementById("sc-xswd-status");
-      if (scXswd) { scXswd.textContent = xswd ? "Allowed" : "Blocked"; scXswd.style.color = xswd ? "var(--success)" : "var(--danger)"; }
+      if (scXswd) { scXswd.textContent = xswd ? "Allowed" : "Blocked"; scXswd.style.color = xswd ? "var(--color-success)" : "var(--color-danger)"; }
     }
     const hasNode = !!node && connected;
     setNodeConnected(hasNode, node);
@@ -504,11 +489,11 @@ async function updateStatusIndicators() {
     const scTelaCount = document.getElementById("sc-tela-count");
     if (scTelaCount) scTelaCount.textContent = tela_apps_count > 0 ? tela_apps_count.toLocaleString() + " discovered" : "—";
     const scNodeStatus = document.getElementById("sc-node-status");
-    if (scNodeStatus) { scNodeStatus.textContent = node ? "Connected" : "Not connected"; scNodeStatus.style.color = node ? "var(--success)" : "var(--danger)"; }
+    if (scNodeStatus) { scNodeStatus.textContent = node ? "Connected" : "Not connected"; scNodeStatus.style.color = node ? "var(--color-success)" : "var(--color-danger)"; }
     const scTelaStatus = document.getElementById("sc-tela-status");
-    if (scTelaStatus) { scTelaStatus.textContent = tela ? "Running" : "Stopped"; scTelaStatus.style.color = tela ? "var(--success)" : "var(--danger)"; }
+    if (scTelaStatus) { scTelaStatus.textContent = tela ? "Running" : "Stopped"; scTelaStatus.style.color = tela ? "var(--color-success)" : "var(--color-danger)"; }
     const scGnomonStatus = document.getElementById("sc-gnomon-status");
-    if (scGnomonStatus) { scGnomonStatus.textContent = gnomon ? "Running" : "Stopped"; scGnomonStatus.style.color = gnomon ? "var(--success)" : "var(--danger)"; }
+    if (scGnomonStatus) { scGnomonStatus.textContent = gnomon ? "Running" : "Stopped"; scGnomonStatus.style.color = gnomon ? "var(--color-success)" : "var(--color-danger)"; }
   } catch (e) {
     console.warn("Status update failed:", e);
   }
@@ -880,19 +865,13 @@ function initTagInput() {
     list.replaceChildren();
     const exts = window.getHiddenExtensions();
     exts.forEach(ext => {
-      const chip = document.createElement("span");
-      chip.className = "tag-chip";
-      chip.textContent = ext;
-      const remove = document.createElement("button");
-      remove.className = "tag-remove";
-      remove.textContent = "✕";
-      remove.onclick = () => {
-        settings.hiddenExtensions = exts.filter(e => e !== ext).join(", ");
-        saveSettings();
-        window.renderTags();
-      };
-      chip.appendChild(remove);
-      list.appendChild(chip);
+      list.appendChild(UI.TagChip(ext, {
+        onRemove: (val) => {
+          settings.hiddenExtensions = exts.filter(e => e !== val).join(", ");
+          saveSettings();
+          window.renderTags();
+        },
+      }));
     });
   };
   function addTag(val) {
@@ -1356,28 +1335,7 @@ async function refreshLogs(levelFilter = "") {
  * @returns {string} HTML string for the log entry
  */
 function createLogEntry(entry) {
-  const timestamp = new Date(entry.timestamp).toLocaleString();
-  const level = entry.level || "INFO";
-  const message = escapeHtml(entry.message || "");
-
-  return `
-    <div class="log-entry">
-      <span class="log-timestamp">${timestamp}</span>
-      <span class="log-level ${level}">${level}</span>
-      <span class="log-message">${message}</span>
-    </div>
-  `;
-}
-
-/**
- * Escapes HTML special characters to prevent XSS in log messages.
- * @param {string} text - Text to escape
- * @returns {string} Escaped text
- */
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
+  return UI.LogEntry(entry);
 }
 
 /**

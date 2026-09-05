@@ -134,50 +134,9 @@
     }
 
     newest.forEach(app => {
-      const row = document.createElement("div");
-      row.className = "latest-find-item";
-
-      const iconSlot = document.createElement("div");
-      iconSlot.className = "icon-slot";
-      if (app.iconURL) {
-        const img = document.createElement("img");
-        img.className = "icon";
-        img.src = app.iconURL;
-        img.onerror = () => iconSlot.replaceChildren(createHexIcon());
-        iconSlot.appendChild(img);
-      } else {
-        iconSlot.appendChild(createHexIcon());
-      }
-
-      const content = document.createElement("div");
-      content.className = "content";
-      const urlEl = document.createElement("div");
-      urlEl.className = "url";
-      urlEl.textContent = app.durl || app.scid;
-      const nameEl = document.createElement("div");
-      nameEl.className = "nameHdr";
-      nameEl.textContent = app.name || app.scid;
-      const scidEl = document.createElement("div");
-      scidEl.className = "scid";
-      scidEl.textContent = app.scid;
-      content.append(urlEl, nameEl, scidEl);
-
-      const meta = document.createElement("div");
-      meta.className = "latest-find-meta";
-      if (isNew(app.scid)) {
-        const tag = document.createElement("span");
-        tag.className = "latest-find-tag";
-        tag.textContent = "NEW";
-        meta.appendChild(tag);
-      }
-      if (app.install_height > 0) {
-        const h = document.createElement("span");
-        h.textContent = "h" + app.install_height.toLocaleString();
-        meta.appendChild(h);
-      }
-
-      row.append(iconSlot, content, meta);
-      row.onclick = () => handleSCIDClick(app.scid);
+      const row = UI.LatestFindItem({ ...app, isNew: isNew(app.scid) }, {
+        onClick: (selected) => handleSCIDClick(selected.scid),
+      });
       latestFindsListEl.appendChild(row);
     });
 
@@ -553,19 +512,6 @@
     }
   }
 
-  function createHexIcon() {
-    const div = document.createElement("div");
-    div.className = "scid-svg";
-    div.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 867 1001">
-        <polygon points="0.5,250.55 433.47,0.58 866.43,250.55 866.43,750.5 433.47,1000.47 0.5,750.5" fill="none" stroke="currentColor" stroke-width="6"/>
-        <polygon points="209.17,371.63 209.17,628.97 433.69,759.79 657.39,630.28 657.39,374.85 433.26,241.71 209.17,371.63" fill="none" stroke="currentColor" stroke-width="6"/>
-        <polygon points="239.64,389.3 239.64,611.21 348.32,675.69 366.79,580 331.72,558.65 331.72,442.81 433.41,384.91 533.88,443.47 533.88,559.84 498.24,579.73 515.93,678.24 626.31,612.4 626.31,392.17 433.26,277.45 239.64,389.3" fill="none" stroke="currentColor" stroke-width="6"/>
-        <polygon points="432.54,420.32 502.73,461.22 502.73,542 464.66,563.58 485.09,694.51 433.7,724.39 378.96,692.5 400.62,564.62 362.1,541.19 362.1,461.28 432.54,420.32" fill="none" stroke="currentColor" stroke-width="6"/>
-      </svg>`;
-    return div;
-  }
-
   function showCleanState() {
     resultsEl.replaceChildren();
     statusEl.textContent = "";
@@ -607,39 +553,14 @@
       return;
     }
     filtered.forEach(r => {
-      const div = document.createElement("div"); div.className = "result";
-      div.onclick = (e) => { div.classList.add("clicking"); setTimeout(() => div.classList.remove("clicking"), 500); handleSCIDClick(r.scid); };
-      const iconSlot = document.createElement("div"); iconSlot.className = "icon-slot";
-      if (r.iconURL) {
-        const img = document.createElement("img"); img.className = "icon"; img.src = r.iconURL;
-        img.onerror = () => iconSlot.replaceChildren(createHexIcon());
-        iconSlot.appendChild(img);
-      } else { iconSlot.appendChild(createHexIcon()); }
-      const content = document.createElement("div"); content.className = "content";
-      const urlEl = document.createElement("div"); urlEl.className = "url"; urlEl.textContent = r.dURL;
-      const nameEl = document.createElement("div"); nameEl.className = "nameHdr"; nameEl.textContent = r.nameHdr;
-      const scidEl = document.createElement("div"); scidEl.className = "scid"; scidEl.textContent = r.scid;
-      const descrEl = document.createElement("div"); descrEl.className = "descr"; descrEl.textContent = r.descrHdr;
-      const ratingEl = document.createElement("div"); ratingEl.className = "rating";
-      ratingEl.textContent = r.ratingsLoaded ? `👍 ${r.likes} 👎 ${r.dislikes} ⭐ ${r.average}` : "—";
-      [urlEl, nameEl, scidEl].forEach(el => {
-        el.style.cursor = "pointer";
-        el.onclick = (e) => { e.stopPropagation(); handleSCIDClick(r.scid); };
+      const row = UI.ResultRow(r, {
+        onClick: handleSCIDClick,
+        onBookmark: (scid) => {
+          if (typeof window.toggleSearchBookmark === "function") window.toggleSearchBookmark(scid);
+        },
+        bookmarked: typeof window.isBookmarked === "function" && window.isBookmarked(r.scid)
       });
-      content.append(urlEl, nameEl, scidEl, descrEl, ratingEl);
-      const bookmarkBtn = document.createElement("button");
-      bookmarkBtn.className = "result-bookmark";
-      const saved = typeof window.isBookmarked === "function" && window.isBookmarked(r.scid);
-      bookmarkBtn.textContent = saved ? "★" : "☆";
-      bookmarkBtn.classList.toggle("saved", saved);
-      bookmarkBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (typeof window.toggleSearchBookmark === "function") {
-          window.toggleSearchBookmark(r.scid);
-        }
-      };
-      div.append(iconSlot, content, bookmarkBtn);
-      resultsEl.appendChild(div);
+      resultsEl.appendChild(row);
     });
   }
 
@@ -655,15 +576,12 @@
     suggestionResults = results.slice(0, 8);
     suggestionIndex = -1;
     if (!suggestionResults.length) { searchSuggestions.classList.add("hidden"); return; }
-    suggestionResults.forEach((r, index) => {
-      const item = document.createElement("div"); item.className = "search-suggestion";
-      const durlEl = document.createElement("div"); durlEl.className = "durl"; durlEl.textContent = r.dURL;
-      const metaEl = document.createElement("div"); metaEl.className = "meta"; metaEl.textContent = r.nameHdr || r.scid;
-      item.append(durlEl, metaEl);
-      item.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        handleSCIDClick(r.scid);
-        hideSuggestions();
+    suggestionResults.forEach((r) => {
+      const item = UI.SearchSuggestion(r, {
+        onSelect: (sel) => {
+          handleSCIDClick(sel.scid);
+          hideSuggestions();
+        },
       });
       searchSuggestions.appendChild(item);
     });

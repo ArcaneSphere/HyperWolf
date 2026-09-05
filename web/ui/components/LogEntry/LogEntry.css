@@ -1,0 +1,86 @@
+/* ============================================================
+   LogEntry.css
+   Mirrors the exact rules from style.css (.log-entry family).
+   Authoritative copy still lives in style.css until a visual
+   regression baseline exists — then it can be removed there.
+   ============================================================ */
+
+.log-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.log-entry {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-entry:hover {
+  background: var(--color-accent-soft);
+}
+
+[data-theme="dark"] .log-entry:hover {
+  background: var(--log-hover-bg);
+}
+
+.log-timestamp {
+  color: var(--color-text-secondary);
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  min-width: 120px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.log-level {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  min-width: 70px;
+  flex-shrink: 0;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+
+.log-level.INFO {
+  background: var(--color-info-soft);
+  color: var(--color-info);
+}
+
+.log-level.WARN {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.log-level.ERROR {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.log-level.SUCCESS {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.log-message {
+  color: var(--color-text);
+  flex: 1;
+  word-break: break-word;
+  white-space: pre-wrap;
+  font-family: inherit;
+}

@@ -1,0 +1,23 @@
+/* ============================================================
+   HexIcon.css
+   Mirrors the exact rules from style.css (.scid-svg).
+   Authoritative copy still lives in style.css until a visual
+   regression baseline exists (Storybook/Chromatic) — then it can
+   be removed from style.css and this file becomes the single home.
+   ============================================================ */
+
+.scid-svg {
+  width: 90%;
+  height: 90%;
+  max-width: 100%;
+  max-height: 100%;
+  color: var(--color-accent);
+  display: block;
+}
+
+[data-theme="dark"] .scid-svg {
+  color: var(--color-accent);
+}
+
+.result .scid-svg { --scid-size: 48px; }
+#sidebar .scid-svg { --scid-size: 32px; }

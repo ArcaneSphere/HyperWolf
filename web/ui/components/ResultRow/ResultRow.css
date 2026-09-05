@@ -1,0 +1,178 @@
+/* ============================================================
+   ResultRow.css
+   Mirrors the exact rules from style.css for .result / .url /
+   .nameHdr / .scid / .descr / .rating / .result-bookmark.
+   Authoritative copy still lives in style.css until a visual
+   regression baseline exists — then it can be removed there.
+   Shared classes (.url, .nameHdr) also used by LatestFindItem.
+   ============================================================ */
+
+.result {
+  border-bottom: 1px solid var(--hairline);
+  padding: 20px 16px;
+  display: flex;
+  gap: 16px;
+  transition: var(--transition);
+  cursor: pointer;
+  border-radius: var(--radius);
+  background: var(--surface-result);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  margin-bottom: 4px;
+}
+
+[data-theme="light"] .result {
+  border-bottom-color: var(--hairline);
+  background: var(--surface-result);
+}
+
+/* Mouse hover only when NOT keyboard navigating */
+body:not(.keyboard-nav) .result:hover,
+.result.keyboard-selected {
+  background: var(--color-panel);
+  margin: 0 -16px;
+  padding: 20px 16px;
+  border-radius: var(--radius);
+  border-color: var(--color-accent);
+}
+
+/* Dark mode glow */
+body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
+[data-theme="dark"] .result.keyboard-selected {
+  box-shadow: var(--color-glow);
+}
+
+/* Active keyboard-selected text colors */
+.result.keyboard-selected .nameHdr,
+.result.keyboard-selected .scid {
+  color: var(--color-accent);
+}
+
+/* Prevent hover flicker conflicts */
+.result.keyboard-selected {
+  position: relative;
+  z-index: 2;
+}
+
+.result .icon-slot {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.result .icon-slot .icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  display: block;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+
+.result .content {
+  flex: 1;
+  min-width: 0;
+}
+
+.url {
+  font-size: 12px;
+  color: var(--color-accent);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nameHdr {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.nameHdr:hover {
+  color: var(--color-accent);
+}
+
+.scid {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  margin-bottom: 8px;
+  transition: var(--transition);
+}
+
+.scid:hover {
+  color: var(--color-accent);
+}
+
+.descr {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.rating {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+/* Container holding the icon */
+.icon-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--scid-size, 48px);
+  height: var(--scid-size, 48px);
+  position: relative;
+}
+
+@keyframes card-click-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.result.clicking {
+  animation: card-click-pulse 0.4s ease 1;
+}
+
+.result-bookmark {
+  align-self: flex-start;
+  margin-top: 4px;
+  background: none;
+  border: none;
+  color: var(--color-star);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-xs);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.result-bookmark:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.result-bookmark.saved {
+  color: var(--color-accent);
+  text-shadow: 0 0 6px var(--color-accent);
+}
+
+@media (max-width: 1024px) {
+  .nameHdr {
+    font-size: 16px;
+  }
+
+  .descr {
+    font-size: 13px;
+  }
+}

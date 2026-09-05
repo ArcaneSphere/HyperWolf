@@ -1,0 +1,13 @@
+/* ============================================================
+   NoResults.css
+   Mirrors the exact rules from style.css (.no-results).
+   Authoritative copy still lives in style.css until a visual
+   regression baseline exists — then it can be removed there.
+   ============================================================ */
+
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-muted);
+  font-size: 15px;
+}

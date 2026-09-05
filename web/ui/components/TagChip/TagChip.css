@@ -1,0 +1,36 @@
+/* ============================================================
+   TagChip.css
+   Mirrors the exact rules from style.css (.tag-chip*).
+   Authoritative copy still lives in style.css until a visual
+   regression baseline exists — then it can be removed there.
+   The input styling (#tag-input-field) stays in style.css with
+   the TagInput composition.
+   ============================================================ */
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.tag-chip .tag-remove {
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tag-chip .tag-remove:hover {
+  color: var(--color-danger);
+}
