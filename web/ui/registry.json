@@ -1,0 +1,285 @@
+{
+  "generatedAt": "2026-09-05T09:19:09.154Z",
+  "version": 1,
+  "purpose": "LLM UI registry: which component to use when, and what it relates to.",
+  "componentCount": 11,
+  "components": [
+    {
+      "name": "HexIcon",
+      "group": "Foundations",
+      "title": "Foundations/HexIcon",
+      "path": "ui/components/HexIcon/HexIcon.stories.js",
+      "description": "DERO/SCID hexagon placeholder used when no app icon is available.",
+      "useWhen": [
+        "Missing app icon in result rows, latest finds, or sidebar"
+      ],
+      "avoidWhen": [
+        "Real app icons exist for the item"
+      ],
+      "related": [
+        "LatestFindItem",
+        "ResultRow"
+      ],
+      "stories": [
+        "Default",
+        "DarkMode"
+      ],
+      "module": "UI.HexIcon"
+    },
+    {
+      "name": "LatestFindItem",
+      "group": "Search",
+      "title": "Search/LatestFindItem",
+      "path": "ui/components/LatestFindItem/LatestFindItem.stories.js",
+      "description": "Row in the latest-finds list: icon slot, uppercase domain, app name, SCID and a meta line that can carry a NEW tag and install height.",
+      "useWhen": [
+        "Recent app lists with icon + NEW highlight",
+        "Search-card latest finds (icon/meta/scid hidden via SearchCard scope)"
+      ],
+      "avoidWhen": [
+        "Full search results with ratings and bookmark controls"
+      ],
+      "related": [
+        "HexIcon",
+        "ResultRow",
+        "SearchCard",
+        "SearchSuggestion"
+      ],
+      "stories": [
+        "Default",
+        "WithIcon",
+        "Stacked",
+        "NoHeight"
+      ],
+      "module": "UI.LatestFindItem"
+    },
+    {
+      "name": "LogEntry",
+      "group": "Components",
+      "title": "Components/LogEntry",
+      "path": "ui/components/LogEntry/LogEntry.stories.js",
+      "description": "Single terminal log line: timestamp, level pill, message.",
+      "useWhen": [
+        "Rendering node/TELA/Gnomon log streams"
+      ],
+      "avoidWhen": [
+        "Structured data tables"
+      ],
+      "related": [
+        "LogContainer",
+        "StatusDot"
+      ],
+      "stories": [
+        "Info",
+        "Warn",
+        "Error",
+        "Success",
+        "List"
+      ],
+      "module": "UI.LogEntry"
+    },
+    {
+      "name": "NoResults",
+      "group": "Components",
+      "title": "Components/NoResults",
+      "path": "ui/components/NoResults/NoResults.stories.js",
+      "description": "Empty-state placeholder shown when a list has no items.",
+      "useWhen": [
+        "Search returned nothing",
+        "Empty bookmark lists",
+        "Empty logs"
+      ],
+      "avoidWhen": [
+        "Loading states (use skeletons/spinners instead)"
+      ],
+      "related": [
+        "BookmarkItem",
+        "ResultRow"
+      ],
+      "stories": [
+        "Default",
+        "CustomMessage"
+      ],
+      "module": "UI.NoResults"
+    },
+    {
+      "name": "Popover",
+      "group": "Overlays",
+      "title": "Overlays/Popover",
+      "path": "ui/components/Popover/Popover.stories.js",
+      "description": "Modal overlay dialog with title, optional message, optional single-line input and an action row. Backdrop click closes. Parent owns visibility via .show()/.hide().",
+      "useWhen": [
+        "Requiring a decision (bookmark save/remove, confirm) with focus on one task"
+      ],
+      "avoidWhen": [
+        "Multi-step flows",
+        "Onboarding with custom node lists (reuse shell, app adds .onboarding-* body)"
+      ],
+      "related": [
+        "OnboardingFlow",
+        "TagChip",
+        "Toast",
+        "ToggleSwitch"
+      ],
+      "stories": [
+        "BookmarkSave",
+        "BookmarkRemove",
+        "Confirm",
+        "EditBookmarkLabel"
+      ],
+      "module": "UI.Popover"
+    },
+    {
+      "name": "ResultRow",
+      "group": "Search",
+      "title": "Search/ResultRow",
+      "path": "ui/components/ResultRow/ResultRow.stories.js",
+      "description": "Compact representation of one search result with icon, domain, name, SCID, description, rating and bookmark.",
+      "useWhen": [
+        "Displaying search results",
+        "Listing DERO TELA apps with ratings"
+      ],
+      "avoidWhen": [
+        "Displaying more than ~20 items",
+        "Showing complex tabular data"
+      ],
+      "related": [
+        "HexIcon",
+        "LatestFindItem",
+        "SearchCard",
+        "StatusBadge"
+      ],
+      "stories": [
+        "Default",
+        "Bookmarked",
+        "LoadingRatings",
+        "KeyboardSelected"
+      ],
+      "module": "UI.ResultRow"
+    },
+    {
+      "name": "SearchSuggestion",
+      "group": "Search",
+      "title": "Search/SearchSuggestion",
+      "path": "ui/components/SearchSuggestion/SearchSuggestion.stories.js",
+      "description": "Single autocomplete row shown in the search dropdown: primary domain URL with a secondary name/SCID meta line.",
+      "useWhen": [
+        "Autocomplete dropdowns under a search box",
+        "Compact domain listings"
+      ],
+      "avoidWhen": [
+        "Long message bodies",
+        "When results need icons or ratings"
+      ],
+      "related": [
+        "LatestFindItem",
+        "ResultRow",
+        "SearchCard"
+      ],
+      "stories": [
+        "Default",
+        "KeyboardSelected",
+        "LongDomain"
+      ],
+      "module": "UI.SearchSuggestion"
+    },
+    {
+      "name": "StatusDot",
+      "group": "Foundations",
+      "title": "Foundations/StatusDot",
+      "path": "ui/components/StatusDot/StatusDot.stories.js",
+      "description": "Small colored status indicator (8px dot) for live state.",
+      "useWhen": [
+        "Showing connected/error/warning/pending state inline"
+      ],
+      "avoidWhen": [
+        "Standalone status text without a dot"
+      ],
+      "related": [
+        "Sidebar",
+        "StatusCard",
+        "Toast"
+      ],
+      "stories": [
+        "AllStates"
+      ],
+      "module": "UI.StatusDot"
+    },
+    {
+      "name": "TagChip",
+      "group": "Components",
+      "title": "Components/TagChip",
+      "path": "ui/components/TagChip/TagChip.stories.js",
+      "description": "Compact removable tag chip with a ✕ button that fires onRemove (rendering the chip list is the parent's job).",
+      "useWhen": [
+        "Hide-extension tag lists",
+        "Small removable token inputs"
+      ],
+      "avoidWhen": [
+        "Long labels (keep < 20 chars)",
+        "Non-removable static badges"
+      ],
+      "related": [
+        "Popover",
+        "TagInput",
+        "ToggleSwitch"
+      ],
+      "stories": [
+        "Default",
+        "Group",
+        "NoRemove"
+      ],
+      "module": "UI.TagChip"
+    },
+    {
+      "name": "Toast",
+      "group": "Components",
+      "title": "Components/Toast",
+      "path": "ui/components/Toast/Toast.stories.js",
+      "description": "Transient notification with status dot, message and dismiss button.",
+      "useWhen": [
+        "Reporting operation outcomes briefly (connected, error, warning, pending)"
+      ],
+      "avoidWhen": [
+        "Persistent inline status",
+        "Long-form messages"
+      ],
+      "related": [
+        "StatusCard",
+        "StatusDot"
+      ],
+      "stories": [
+        "Connected",
+        "Error",
+        "Warning",
+        "Pending"
+      ],
+      "module": "UI.Toast"
+    },
+    {
+      "name": "ToggleSwitch",
+      "group": "Components",
+      "title": "Components/ToggleSwitch",
+      "path": "ui/components/ToggleSwitch/ToggleSwitch.stories.js",
+      "description": "Boolean on/off control rendered as a sliding switch. The input is a real checkbox for a11y.",
+      "useWhen": [
+        "Single boolean settings (auto-connect, show top bar, check updates)"
+      ],
+      "avoidWhen": [
+        "Three-state or numeric options",
+        "Requiring immediate save confirmation"
+      ],
+      "related": [
+        "Popover",
+        "StatusCard",
+        "TagChip"
+      ],
+      "stories": [
+        "Off",
+        "On",
+        "Rows"
+      ],
+      "module": "UI.ToggleSwitch"
+    }
+  ]
+}
