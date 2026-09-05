@@ -63,3 +63,18 @@
   padding: 2px 6px;
   outline: none;
 }
+
+/* ---------- 640px responsive (moved from style.css) ---------- */
+@media (max-width: 640px) {
+  .bookmark-item {
+    padding: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .bookmark-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

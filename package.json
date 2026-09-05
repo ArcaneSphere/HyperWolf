@@ -5,12 +5,16 @@
   "scripts": {
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "registry": "node web/ui/registry.js"
+    "registry": "node web/ui/registry.js",
+    "check": "node web/ui/guardrails.cjs"
   },
   "devDependencies": {
-    "storybook": "^8.4.2",
+    "@storybook/addon-docs": "^8.4.2",
     "@storybook/html": "^8.4.2",
     "@storybook/html-vite": "^8.4.2",
-    "@storybook/addon-docs": "^8.4.2"
+    "pixelmatch": "^7.2.0",
+    "playwright-core": "^1.63.0",
+    "pngjs": "^7.0.0",
+    "storybook": "^8.4.2"
   }
 }

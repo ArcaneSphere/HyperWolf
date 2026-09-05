@@ -52,3 +52,10 @@
   background: white;
   transform: translateX(22px);
 }
+
+/* 640px: in stacked settings rows the switch aligns to the row end */
+@media (max-width: 640px) {
+  .toggle-switch {
+    align-self: flex-end;
+  }
+}

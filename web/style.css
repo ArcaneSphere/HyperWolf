@@ -908,35 +908,8 @@ body.g-instagram {
   white-space: nowrap;
 }
 
-/* .latest-find-item base rules live in web/ui/components/LatestFindItem/LatestFindItem.css */
-
-.search-card .latest-find-item .icon-slot {
-  display: none;
-}
-
-.search-card .latest-find-item .latest-find-meta {
-  display: none;
-}
-
-.search-card .latest-find-item .scid {
-  display: none;
-}
-
-.search-card .latest-find-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 8px 16px;
-}
-
-.search-card .latest-find-item .content .url {
-  font-size: 0.75em;
-}
-
-.search-card .latest-find-item .content .nameHdr {
-  font-size: 0.75em;
-}
+/* .search-card .latest-find-item compact rows — live in
+   web/ui/components/SearchCard/SearchCard.css */
 
 /* .result family / .icon-slot / .url / .nameHdr / .scid / .descr /
    .rating / .result-bookmark — live in ResultRow.css and HexIcon.css */
@@ -1608,16 +1581,14 @@ body.g-instagram {
     right: 10px;
   }
 
-  .bookmark-item,
+  /* .bookmark-item 640px rules — live in BookmarkItem.css */
   .info-box {
     padding: 16px;
   }
 
   /* .setting-item + .setting-row at <=640px — live in SettingItem.css */
 
-  .toggle-switch {
-    align-self: flex-end;
-  }
+  /* .toggle-switch 640px — live in ToggleSwitch.css */
 
   .tag-input {
     min-height: auto;
@@ -1628,27 +1599,10 @@ body.g-instagram {
     width: 100%;
   }
 
-  .bookmark-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .bookmark-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
+  /* .bookmark-item/.bookmark-actions 640px rules — live in BookmarkItem.css */
 
   /* .status-grid/.card-row/.card-label responsive — StatusCard.css */
-  .controls {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .controls button {
-    width: 100%;
-    justify-content: center;
-  }
+  /* .controls/.controls button 640px rules — live in SearchControlsRow.css */
 
   /* .status-box / .toast 640px rules — live in Toast.css */
 

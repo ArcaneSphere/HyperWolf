@@ -166,3 +166,16 @@
     width: 140px;
   }
 }
+
+/* ---------- 640px controls (moved from style.css) ---------- */
+@media (max-width: 640px) {
+  .controls {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .controls button {
+    width: 100%;
+    justify-content: center;
+  }
+}

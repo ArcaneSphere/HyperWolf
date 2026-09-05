@@ -128,3 +128,32 @@
     gap: 8px;
   }
 }
+
+/* Compact latest-find rows inside the card (moved from style.css) */
+.search-card .latest-find-item .icon-slot {
+  display: none;
+}
+
+.search-card .latest-find-item .latest-find-meta {
+  display: none;
+}
+
+.search-card .latest-find-item .scid {
+  display: none;
+}
+
+.search-card .latest-find-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 16px;
+}
+
+.search-card .latest-find-item .content .url {
+  font-size: 0.75em;
+}
+
+.search-card .latest-find-item .content .nameHdr {
+  font-size: 0.75em;
+}

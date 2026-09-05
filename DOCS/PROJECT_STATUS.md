@@ -1,6 +1,6 @@
 # PROJECT STATUS — HyperWolf UI / LLM-vriendelijkheid
 
-**Snapshot datum:** 2026-09-05 (continuatiesessie, na SearchControlsRow/SettingItem/SyncProgress/OnboardingFlow + commit `db55563`)
+**Snapshot datum:** 2026-09-05 (guardrails-sessie: canonical-ownership checker live; daarvoor Fase 3 + commit `db55563`)
 **Versie:** 0.10.0 (single source: `internal/buildinfo/version.go`)
 **Module:** `hyperwolf` (Go 1.26.0), `//go:embed web/*` in `main.go:28`
 
@@ -13,7 +13,7 @@
 | 1 | Codebase in kaart brengen (html/js/css/registry/component-pattern) | ✅ klaar |
 | 2 | Inline styles verplaatsen naar component CSS / style.css | ✅ klaar |
 | 3 | Compositie-componenten extraheren (pure builders + eigen CSS + stories) | ✅ 8 van 8 klaar |
-| 4 | Visual regression baseline + guardrails + AGENTS.md | ⬜ open |
+| 4 | Visual regression baseline + guardrails + AGENTS.md | 🟡 guardrails ✅ · baseline/AGENTS.md open |
 
 **Fase 3 extraheren (8 kandidaten — allen klaar):**
 - ✅ `SearchCard` — bottom-panel kaart-shell (5 stories)
@@ -147,14 +147,17 @@ Het eerste snapshot-bestand verdween na diverse build/restart-stappen zonder tus
 ### 7c. Anchor mismatch bij sectie-splitsing (geleerd)
 Sectie-headers in style.css wisselen in `=`-lengte van sluitregel (`=========== */`). Les: ankeren op de openingsregel (`/* ===============================\n   NAME`) i.p.v. het volledige header-blok; eerste run faalde netjes documenteersbaar door `assert` (niets is geschreven) — de atomic-python-werkwijse betaalt zich uit.
 
+### 7d. Guardrail wees resterende owned-selectors aan (opgelost)
+De `subjectTokenRules`-scan (rule-subject i.p.v. elk klasse-voorkomen) toonde 11 nog-losgekoppelde rules in style.css — alle 640px-residuen die de frequentie-heuristiek eerder miste: `.bookmark-item`/`.bookmark-actions` → BookmarkItem.css, `.controls`/`.controls button` → SearchControlsRow.css, `.search-card .latest-find-item` compact-blok → SearchCard.css, `.toggle-switch` align-self → ToggleSwitch.css. ALLOW-lijst empirisch uitgekamd (lege-lijst probe): alleen `search-sticky` + `sidebar` blijken échte page-level share-tokens; 9 overtollige entries verwijderd. Eindtoestand: `guardrails.cjs --discover` = 0 warnings.
+
 **Werkwijze:** bulk-bewerkingen via één ge-asserted Python-script; outputs van bash/grep/read kunnen in deze omgeving gedupliceerd of verknipt **weergegeven** worden (bestandsinhoud is betrouwbaar geverifieerd via braces/node/curl; vertrouw niet op visuele output van lange blokken).
 
 ---
 
 ## 8. Next steps (todo)
 
-1. **Fase 4:** visual regression baseline, guardrails, AGENTS.md.
-2. **Commit** deze staat (Fase 3 compleet; 19 componenten; versie 0.10.0; dit doc).
+1. **Fase 4 (rest):** visual regression baseline (Storybook) rond pixelmatch/playwright-core + AGENTS.md.
+2. **Onderhoud registered:** regelrechtende loop aan nieuwe `npm run check` binding; een nieuwe component moet de canonical-ownership-checks sluitend houden.
 3. Doorlooptijd/onderhoud: versie bumps via `internal/buildinfo/version.go` + web-fallbacks (`web/index.html #hw-version`, `web/search.js currentAppVersion`, SearchCard-story-tekst, README).
 
 ---
@@ -164,7 +167,8 @@ Sectie-headers in style.css wisselen in `=`-lengte van sluitregel (`=========== 
 | Pad | Opmerking |
 |-----|-----------|
 | `web/index.html` | 19 css-links + 19 scripts; 1 inline style (`#sync-bar`); 754 regels, 38 `ui/components`-referenties |
-| `web/style.css` | 241/241 braces, 1725 regels; compositie-rules + pointer-comments |
+| `web/style.css` | 230/230 braces, 1678 regels; compositie-rules + pointer-comments |
+| `web/ui/guardrails.cjs` | canonical-ownership-checker; `npm run check` (`--discover` voor empirische ALLOW-onderhoud) |
 | `web/dashboard.js` | `createBookmarkItem` → `UI.BookmarkItem`; sync/onboarding/log door ids gestuurd |
 | `web/search.js` | stuurt de statische controls-row/custom-select (ongewijzigd in deze sessie) |
 | `web/ui/components/` | 19 dirs (11 bestaand + 8 nieuw) |
