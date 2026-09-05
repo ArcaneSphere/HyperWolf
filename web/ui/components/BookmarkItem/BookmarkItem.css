@@ -1,0 +1,65 @@
+/* ============================================================
+   BookmarkItem.css
+   Canonical owner of the .bookmark-item family. The base card
+   visual (background/border/padding/shadow) was split out of the
+   shared `.setting-item, .bookmark-item, .info-box` rule in
+   style.css and is now owned here; .setting-item/.info-box keep
+   their base in style.css.
+   ============================================================ */
+
+.bookmark-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.bookmark-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .bookmark-item:hover {
+  box-shadow: var(--color-glow);
+}
+
+.bookmark-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bookmark-label {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+  color: var(--color-text);
+}
+
+.bookmark-value {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bookmark-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.bookmark-label[contenteditable="true"] {
+  background: var(--color-input);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-xs);
+  padding: 2px 6px;
+  outline: none;
+}

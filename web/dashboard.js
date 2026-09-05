@@ -741,52 +741,17 @@ function renderBookmarks() {
 }
 
 function createBookmarkItem(label, value, onLoad, onRemove) {
-  const root = document.createElement("div");
-  root.className = "bookmark-item";
-  const info = document.createElement("div");
-  info.className = "bookmark-info";
-  const l = document.createElement("div");
-  l.className = "bookmark-label";
-  l.textContent = label;
-  const v = document.createElement("div");
-  v.className = "bookmark-value";
-  v.textContent = value;
-  const actions = document.createElement("div");
-  actions.className = "bookmark-actions";
-  const load = document.createElement("button");
-  load.className = "small";
-  load.textContent = "Load";
-  load.onclick = onLoad;
-  const edit = document.createElement("button");
-  edit.className = "small";
-  edit.textContent = "✏";
-  edit.title = "Edit label";
-  edit.onclick = (e) => {
-    e.stopPropagation();
-    l.contentEditable = "true";
-    l.focus();
-    const range = document.createRange();
-    range.selectNodeContents(l);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-  };
-  l.addEventListener("blur", () => {
-    l.contentEditable = "false";
-    const target = value.length === 64 ? bookmarks.scids : bookmarks.nodes;
-    if (target[value]) { target[value].label = l.textContent || value.slice(0, 8); saveBookmarks(); }
-  });
-  l.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); l.blur(); }
-  });
-  const remove = document.createElement("button");
-  remove.className = "small danger";
-  remove.textContent = "Remove";
-  remove.onclick = onRemove;
-  info.append(l, v);
-  actions.append(load, edit, remove);
-  root.append(info, actions);
-  return root;
+  // Delegates to the canonical component (web/ui/components/BookmarkItem).
+  return UI.BookmarkItem({
+    label: label,
+    value: value,
+    onLoad: onLoad,
+    onRemove: onRemove,
+    onCommit: (newLabel) => {
+      const target = value.length === 64 ? bookmarks.scids : bookmarks.nodes;
+      if (target[value]) { target[value].label = newLabel || value.slice(0, 8); saveBookmarks(); }
+    }
+  }).element;
 }
 
 // ================= INIT BOOKMARKS =================

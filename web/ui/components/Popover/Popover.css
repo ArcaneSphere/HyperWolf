@@ -91,3 +91,8 @@
   margin-bottom: 12px;
   line-height: 1.5;
 }
+
+/* Static #confirm-popover renders a narrower content panel than the default. */
+#confirm-popover .popover-content {
+  max-width: 360px;
+}

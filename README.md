@@ -316,7 +316,7 @@ HyperWolf can install itself as a first-class desktop application on all three m
 
 HyperWolf is in **beta** — actively used but evolving. The core feature set (TELA browsing, search, system tray, desktop integration) is stable.
 
-**Version:** 0.9.0  
+**Version:** 0.10.0  
 **License:** [MIT](LICENSE)  
 
 ### Roadmap Ideas

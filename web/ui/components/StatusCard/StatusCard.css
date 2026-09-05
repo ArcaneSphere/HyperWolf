@@ -1,0 +1,136 @@
+/* ============================================================
+   StatusCard.css
+   Canonical owner of the dashboard status-card family: the
+   .status-grid, .status-card, card .card-header/.card-body layout,
+   label/value rows (.card-row/.card-label/.card-value/-lg), the
+   .card-apps variant and the expandable .card-expand details.
+   These rules were removed from style.css (status card grid
+   section); #sv-tela-status is app-specific but stays here as part
+   of the .card-apps variant contract.
+   ============================================================ */
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.status-card {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.status-card:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--color-glow);
+}
+
+.card-header {
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-accent);
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+}
+
+.card-body {
+  padding: 14px 16px;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.card-label {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.card-value {
+  color: var(--color-text);
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  max-width: 70%;
+  text-align: right;
+}
+
+.card-value-lg {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+/* TELA Apps card variant: centered rows with a large headline count */
+.card-apps .card-value-lg {
+  font-size: 32px;
+}
+
+.card-apps .card-value {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.card-apps .card-row {
+  justify-content: center;
+  gap: 8px;
+}
+
+#sv-tela-status {
+  font-size: 12px;
+  color: var(--color-text);
+}
+
+/* Expandable details section */
+.card-expand {
+  margin-top: 8px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+}
+
+.card-expand summary {
+  cursor: pointer;
+  color: var(--color-accent);
+  font-weight: 500;
+  font-size: 12px;
+  user-select: none;
+  padding: 2px 0;
+}
+
+.card-expand summary:hover {
+  opacity: 0.8;
+}
+
+.card-expand[open] .card-row {
+  font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .card-label {
+    min-width: auto;
+  }
+}

@@ -443,7 +443,6 @@ pre {
 ================================ */
 
 .setting-item,
-.bookmark-item,
 .info-box {
   background: var(--color-panel);
   border: 1px solid var(--color-border);
@@ -454,15 +453,13 @@ pre {
   transition: var(--transition);
 }
 
-.setting-item:hover,
-.bookmark-item:hover {
+.setting-item:hover {
   box-shadow: var(--shadow-md);
   border-color: var(--color-accent);
   transform: translateY(-1px);
 }
 
-[data-theme="dark"] .setting-item:hover,
-[data-theme="dark"] .bookmark-item:hover {
+[data-theme="dark"] .setting-item:hover {
   box-shadow: var(--color-glow);
 }
 
@@ -502,6 +499,18 @@ pre {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+/* Descriptions beside a toggle are flush within the row (no bottom margin) */
+.setting-row .setting-description {
+  margin-bottom: 0;
+}
+
+/* Standalone title that visually separates a section (e.g. Live Info Card) */
+.setting-section-separator {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
 }
 
 /* Toggle switch — base rules live in web/ui/components/ToggleSwitch/ToggleSwitch.css */
@@ -601,6 +610,19 @@ input[readonly] {
   cursor: not-allowed;
 }
 
+/* Compact selects (variants of the base input sizing) */
+.select-compact {
+  padding: 10px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.select-mini {
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 /* ===============================
    BUTTONS
 ================================ */
@@ -663,6 +685,10 @@ button.danger:hover {
 button.small {
   padding: 8px 14px;
   font-size: 12px;
+}
+
+#reset-settings-btn {
+  width: 100%;
 }
 
 button.success {
@@ -855,55 +881,8 @@ button.success:hover {
   font-weight: 600;
 }
 
-/* ===============================
-   BOOKMARKS
-================================ */
-
-.bookmark-section {
-  margin-bottom: 32px;
-}
-
-.bookmark-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.bookmark-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.bookmark-label {
-  font-weight: 600;
-  font-size: 15px;
-  margin-bottom: 4px;
-  color: var(--color-text);
-}
-
-.bookmark-value {
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  font-family: 'Courier New', monospace;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bookmark-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.bookmark-label[contenteditable="true"] {
-  background: var(--color-input);
-  border: 1px solid var(--color-accent);
-  border-radius: var(--radius-xs);
-  padding: 2px 6px;
-  outline: none;
-}
-
-/* ===============================
+/* .bookmark-item family — canonical owner is
+   web/ui/components/BookmarkItem/BookmarkItem.css *//* ===============================
    POPOVER
 =============================== */
 
@@ -1264,90 +1243,14 @@ body.g-instagram {
 /* ===============================
    SEARCH CARDS (Bottom Panel)
 ================================ */
+/* ===============================
+   SEARCH CARDS (Bottom Panel)
+   .search-cards / .search-card / .search-card-header / .search-card-body
+   / .search-card-empty + responsive grid — canonical owner is
+   web/ui/components/SearchCard/SearchCard.css
+=============================== */
 
-.search-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  position: fixed;
-  bottom: 25px;
-  left: 5%;
-  right: 5%;
-  width: auto;
-  max-width: 1200px;
-  margin: 0 auto;
-  z-index: 10;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.search-cards.hidden-cards {
-  opacity: 0;
-  transform: translateY(12px);
-  pointer-events: none;
-}
-
-.search-card {
-  background: var(--surface-search-card);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: none;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition: var(--transition);
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow-search-card);
-}
-
-[data-theme="dark"] .search-card {
-  background: var(--surface-search-card);
-  box-shadow: var(--shadow-search-card);
-}
-
-[data-theme="light"] .search-card {
-  background: var(--surface-search-card);
-  box-shadow: var(--shadow-search-card);
-}
-
-.search-card:hover {
-  border-color: transparent;
-}
-
-[data-theme="light"] .search-card:hover {
-  border-color: transparent;
-}
-
-.search-card-header {
-  padding: 6px 12px;
-  font-weight: 600;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--color-text);
-  border: none;
-}
-
-.search-card-body {
-  padding: 8px 16px;
-  flex: 1;
-}
-
-.search-card-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.3;
-  border-style: dashed;
-}
-
-.search-card-empty::after {
-  content: "Coming soon";
-  font-size: 11px;
-  color: var(--color-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
+/* Status card body specifics (search page bottom panel) */
 .search-card-status-body {
   padding: 8px 16px;
 }
@@ -1673,6 +1576,10 @@ body.g-instagram {
   margin-bottom: 12px;
 }
 
+.info-box .resource-group {
+  margin-top: 16px;
+}
+
 /* ===============================
    BOOKMARK STARS
 ================================ */
@@ -1800,110 +1707,9 @@ body.g-instagram {
 }
 
 
-/* ===============================
-   STATUS CARD GRID
-=============================== */
-
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.status-card {
-  background: var(--color-panel);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition: var(--transition);
-}
-
-.status-card:hover {
-  border-color: var(--color-accent);
-  box-shadow: var(--color-glow);
-}
-
-.card-header {
-  padding: 12px 16px;
-  font-weight: 600;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--color-accent);
-  border-bottom: 1px solid var(--color-border);
-  background: transparent;
-}
-
-.card-body {
-  padding: 14px 16px;
-}
-
-.card-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 0;
-  font-size: 13px;
-}
-
-.card-label {
-  color: var(--color-text-secondary);
-  font-weight: 500;
-}
-
-.card-value {
-  color: var(--color-text);
-  font-weight: 600;
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
-  overflow-wrap: break-word;
-  word-break: break-all;
-  max-width: 70%;
-  text-align: right;
-}
-
-.card-value-lg {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--color-accent);
-}
-
-.card-apps .card-value-lg {
-  font-size: 32px;
-}
-
-.card-expand {
-  margin-top: 8px;
-  border-top: 1px solid var(--color-border);
-  padding-top: 8px;
-}
-
-.card-expand summary {
-  cursor: pointer;
-  color: var(--color-accent);
-  font-weight: 500;
-  font-size: 12px;
-  user-select: none;
-  padding: 2px 0;
-}
-
-.card-expand summary:hover {
-  opacity: 0.8;
-}
-
-.card-expand[open] .card-row {
-  font-size: 12px;
-}
-
-.sync-label {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  font-weight: 500;
-  margin-bottom: 6px;
-}
-
-/* ===============================
+/* .status-grid/.status-card/.card-* family — canonical owner is
+   web/ui/components/StatusCard/StatusCard.css (incl. .card-apps,
+   .card-expand, #sv-tela-status and the 640px responsive rules) *//* ===============================
    PROGRESS BAR
 =============================== */
 
@@ -1939,12 +1745,7 @@ body.g-instagram {
    RESPONSIVE
 ================================ */
 
-@media (max-width: 1024px) {
-  .search-cards {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-}
+/* .search-cards grid at <=1024px — lives in SearchCard.css */
 
 @media (max-width: 768px) {
   #sidebar {
@@ -1957,14 +1758,6 @@ body.g-instagram {
 
   h2 {
     font-size: 24px;
-  }
-
-  .search-cards {
-    left: 16px;
-    right: 16px;
-    bottom: 16px;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
   }
 
   .top-input {
@@ -2010,23 +1803,9 @@ body.g-instagram {
      live in ResultRow.css; .toast — live in Toast.css */
 }
 
-@media (max-width: 640px) {
-  .search-cards {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
-  }
-  .search-card-body {
-    padding: 10px 12px;
-  }
-  
-  .search-card-header {
-    padding: 8px 12px;
-    font-size: 11px;
-  }
+/* .search-cards grid + body/header padding at <=640px — lives in SearchCard.css */
 
+@media (max-width: 640px) {
   #content {
     padding: 16px;
   }
@@ -2132,20 +1911,7 @@ body.g-instagram {
     justify-content: flex-end;
   }
 
-  .status-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .card-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .card-label {
-    min-width: auto;
-  }
-
+  /* .status-grid/.card-row/.card-label responsive — StatusCard.css */
   .controls {
     flex-direction: column;
     width: 100%;
@@ -2179,13 +1945,6 @@ body.g-instagram {
 @media (max-width: 360px) {
   #content {
     padding: 12px;
-  }
-
-  .search-cards {
-    bottom: 8px;
-    left: 8px;
-    right: 8px;
-    gap: 8px;
   }
 }/* ================= SCID LOADER ================= */
 #scid-loader {
@@ -2233,55 +1992,6 @@ body.g-instagram {
   to { opacity: 0; }
 }
 
-/* ================================
-   LOG PAGE
-================================ */
-
-.log-container {
-  background: var(--color-input);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 12px;
-  height: calc(100vh - 200px);
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
-  scrollbar-gutter: stable;
-}
-
-/* .log-empty / .log-entry family + dark hover — live in LogEntry.css */
-
-.log-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.log-filter-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.log-action-group {
-  display: flex;
-  gap: 8px;
-}
-
-.log-auto-scroll {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Dark mode log container styling */
-[data-theme="dark"] .log-container {
-  background: var(--log-bg);
-  border-color: var(--log-border);
-}
-
-/* [data-theme="dark"] .log-entry:hover — live in LogEntry.css */
+/* .log-container + controls + auto-scroll + dark variant — canonical
+   owner is web/ui/components/LogContainer/LogContainer.css
+   (.log-empty/.log-entry family — LogEntry.css) */

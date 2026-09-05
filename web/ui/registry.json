@@ -1,9 +1,36 @@
 {
-  "generatedAt": "2026-09-05T09:19:09.154Z",
+  "generatedAt": "2026-09-05T11:21:13.596Z",
   "version": 1,
   "purpose": "LLM UI registry: which component to use when, and what it relates to.",
-  "componentCount": 11,
+  "componentCount": 15,
   "components": [
+    {
+      "name": "BookmarkItem",
+      "group": "Bookmarks",
+      "title": "Bookmarks/BookmarkItem",
+      "path": "ui/components/BookmarkItem/BookmarkItem.stories.js",
+      "description": "A bookmark row for the Bookmarks page: label + monospace value on the left, Load / ✏ inline-edit / Remove actions on the right. Callers get { element, labelEl, valueEl }; label edits surface via onCommit.",
+      "useWhen": [
+        "Rendering saved nodes or SCIDs in bookmark lists",
+        "Any list row needing load + destructive + rename actions"
+      ],
+      "avoidWhen": [
+        "Search results with ratings and icons — use ResultRow",
+        "Flow of adding/removing via popover — use BookmarkFlow/Popover"
+      ],
+      "related": [
+        "NoResults",
+        "Popover",
+        "ResultRow",
+        "StatusCard"
+      ],
+      "stories": [
+        "Node",
+        "Scid",
+        "Stack"
+      ],
+      "module": "UI.BookmarkItem"
+    },
     {
       "name": "HexIcon",
       "group": "Foundations",
@@ -52,6 +79,32 @@
         "NoHeight"
       ],
       "module": "UI.LatestFindItem"
+    },
+    {
+      "name": "LogContainer",
+      "group": "Server",
+      "title": "Server/LogContainer",
+      "path": "ui/components/LogContainer/LogContainer.stories.js",
+      "description": "Live log view shell: level filter + refresh/clear actions + auto-follow checkbox + scrollable monospace terminal panel. Builds the same ids (#log-level-filter, #log-refresh-btn, #log-clear-btn, #log-auto-scroll, #log-container) the app wires on DOMContentLoaded; pass UI.LogEntry rows as children.",
+      "useWhen": [
+        "A live log/event stream on the server page",
+        "Recreating the activity-log panel"
+      ],
+      "avoidWhen": [
+        "Static text listings — use a plain log-container or info-box",
+        "Search result lists — use ResultRow/SearchCard"
+      ],
+      "related": [
+        "Browser",
+        "LogEntry",
+        "PopupSearch",
+        "StatusCard"
+      ],
+      "stories": [
+        "Empty",
+        "WithEntries"
+      ],
+      "module": "UI.LogContainer"
     },
     {
       "name": "LogEntry",
@@ -158,6 +211,36 @@
       "module": "UI.ResultRow"
     },
     {
+      "name": "SearchCard",
+      "group": "Search",
+      "title": "Search/SearchCard",
+      "path": "ui/components/SearchCard/SearchCard.stories.js",
+      "description": "Bottom-panel card shell with a labelled header row (title + optional trailing badge/button) and a body container. Ships as the fixed 3-up `.search-cards` grid; each card stacks full-width below 640px.",
+      "useWhen": [
+        "Building a search-page bottom card panel (Latest Finds, Updates & News, Node Status)",
+        "Any fixed bottom information card that needs a header + body"
+      ],
+      "avoidWhen": [
+        "Inline cards in a normal document flow — those should use plain panels",
+        "Card content that is itself a self-contained component (use LatestFindItem, ResultRow, … in the body)"
+      ],
+      "related": [
+        "LatestFindItem",
+        "LiveInfoCard",
+        "ResultRow",
+        "SearchSuggestion",
+        "StatusCard"
+      ],
+      "stories": [
+        "LatestFinds",
+        "UpdatesAndNews",
+        "NodeStatus",
+        "EmptyState",
+        "Stack"
+      ],
+      "module": "UI.SearchCard"
+    },
+    {
       "name": "SearchSuggestion",
       "group": "Search",
       "title": "Search/SearchSuggestion",
@@ -182,6 +265,34 @@
         "LongDomain"
       ],
       "module": "UI.SearchSuggestion"
+    },
+    {
+      "name": "StatusCard",
+      "group": "Server",
+      "title": "Server/StatusCard",
+      "path": "ui/components/StatusCard/StatusCard.stories.js",
+      "description": "Dashboard status card: header, monospace label/value rows, optional expandable <details>, and a .card-apps variant with a centered large count. Grid wrapper .status-grid stacks a 1-col responsive layout.",
+      "useWhen": [
+        "Server overview panels (Network / TELA Apps / Sync Status)",
+        "Compact key-value readouts with optional collapsible details"
+      ],
+      "avoidWhen": [
+        "Search-result bottom panels — use SearchCard",
+        "Long-form content — use SettingItem / info-box"
+      ],
+      "related": [
+        "SearchCard",
+        "SettingItem",
+        "StatusDot",
+        "Toast"
+      ],
+      "stories": [
+        "Network",
+        "TelaApps",
+        "Sync",
+        "Grid"
+      ],
+      "module": "UI.StatusCard"
     },
     {
       "name": "StatusDot",

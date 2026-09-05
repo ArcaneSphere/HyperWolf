@@ -1,0 +1,75 @@
+/* ============================================================
+   LogContainer.css
+   Canonical owner of the log-viewer shell: the scrollable terminal
+   panel (.log-container) plus its controls row (.log-controls,
+   .log-filter-group, .log-action-group, .log-auto-scroll and the
+   #log-auto-scroll checkbox). The .log-entry family itself lives
+   in LogEntry.css. Removed from style.css (log page section).
+   ============================================================ */
+
+.log-container {
+  background: var(--color-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  height: calc(100vh - 200px);
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  scrollbar-gutter: stable;
+}
+
+/* .log-empty / .log-entry family + dark hover — live in LogEntry.css */
+
+.log-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.log-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-action-group {
+  display: flex;
+  gap: 8px;
+}
+
+.log-auto-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.log-filter-group label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.log-auto-scroll label {
+  cursor: pointer;
+}
+
+#log-auto-scroll {
+  accent-color: var(--color-accent);
+  width: 16px;
+  height: 16px;
+}
+
+/* Dark mode log container styling */
+[data-theme="dark"] .log-container {
+  background: var(--log-bg);
+  border-color: var(--log-border);
+}
+
+/* [data-theme="dark"] .log-entry:hover — live in LogEntry.css */

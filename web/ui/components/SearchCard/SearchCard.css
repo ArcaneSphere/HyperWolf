@@ -1,0 +1,130 @@
+/* ============================================================
+   SearchCard.css
+   Canonical owner of the .search-card shell (header/body/empty)
+   and the #search-cards fixed bottom grid. Card-specific bodies
+   (live-info, status rows, latest-finds overrides) stay in
+   style.css as composition rules; LatestFindItem owns its rows.
+   ============================================================ */
+
+.search-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  position: fixed;
+  bottom: 25px;
+  left: 5%;
+  right: 5%;
+  width: auto;
+  max-width: 1200px;
+  margin: 0 auto;
+  z-index: 10;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.search-cards.hidden-cards {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+
+.search-card {
+  background: var(--surface-search-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-search-card);
+}
+
+[data-theme="dark"] .search-card,
+[data-theme="light"] .search-card {
+  background: var(--surface-search-card);
+  box-shadow: var(--shadow-search-card);
+}
+
+.search-card:hover,
+[data-theme="light"] .search-card:hover {
+  border-color: transparent;
+}
+
+.search-card-header {
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text);
+  border: none;
+}
+
+.search-card-body {
+  padding: 8px 16px;
+  flex: 1;
+}
+
+/* Empty-state body variant: dashed, dimmed, "Coming soon" */
+.search-card-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.3;
+  border-style: dashed;
+}
+
+.search-card-empty::after {
+  content: "Coming soon";
+  font-size: 11px;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive grid */
+@media (max-width: 1024px) {
+  .search-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-cards {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .search-cards {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+  }
+
+  .search-card-body {
+    padding: 10px 12px;
+  }
+
+  .search-card-header {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-cards {
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    gap: 8px;
+  }
+}

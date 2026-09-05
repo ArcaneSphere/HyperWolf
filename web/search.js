@@ -806,7 +806,7 @@
   const rssFeedUpdated = document.getElementById("rss-feed-updated");
   
   // State
-  let currentAppVersion = "0.9.0";
+  let currentAppVersion = "0.10.0";
   let rssFeedUrl = "https://dero.world/anotherworld/feed/";
   let updateCheckEnabled = true;
   let rssRefreshInterval = null;
