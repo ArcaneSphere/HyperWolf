@@ -3,4 +3,4 @@
 // config endpoint) and main reference this to avoid drift.
 package buildinfo
 
-const Version = "0.14.0"
+const Version = "0.14.1"
