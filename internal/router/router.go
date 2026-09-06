@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -19,6 +20,7 @@ import (
 
 	"hyperwolf/internal/buildinfo"
 	"hyperwolf/internal/daemon"
+	"hyperwolf/internal/fileutil"
 	"hyperwolf/internal/indexer"
 	"hyperwolf/internal/state"
 	telapkg "hyperwolf/internal/tela"
@@ -95,8 +97,39 @@ func NewServer(addr string, webFS fs.FS, h *Handlers) *http.Server {
 
 	return &http.Server{
 		Addr:    addr,
-		Handler: mux,
+		Handler: localOriginMiddleware(mux, addr),
 	}
+}
+
+func isAllowedDashboardOrigin(rawOrigin, listenAddr string) bool {
+	u, err := url.Parse(rawOrigin)
+	if err != nil || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" {
+		return false
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return false
+	}
+	_, listenPort, err := net.SplitHostPort(listenAddr)
+	if err != nil || u.Port() != listenPort {
+		return false
+	}
+	host := strings.ToLower(u.Hostname())
+	return host == "localhost" || host == "127.0.0.1" || host == "::1"
+}
+
+// localOriginMiddleware blocks browser-originated cross-site requests to the
+// dashboard control surface. Requests without Origin remain available to
+// local tools; browser clients must use the configured dashboard origin.
+func localOriginMiddleware(next http.Handler, listenAddr string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		protected := strings.HasPrefix(r.URL.Path, "/api/") || r.URL.Path == "/ws"
+		if protected && origin != "" && !isAllowedDashboardOrigin(origin, listenAddr) {
+			http.Error(w, "cross-origin request denied", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // ---- Control Handlers ----
@@ -772,7 +805,7 @@ func (h *Handlers) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, ctrlResp{OK: false, Error: "marshal config: " + err.Error()})
 		return
 	}
-	if err := os.WriteFile(cfgPath, data, 0644); err != nil {
+	if err := fileutil.WriteFileAtomic(cfgPath, data, 0644); err != nil {
 		writeJSON(w, ctrlResp{OK: false, Error: "write config: " + err.Error()})
 		return
 	}

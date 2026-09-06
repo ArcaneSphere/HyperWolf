@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend tooling
+        run: npm ci
+
+      - name: Verify frontend
+        run: npm run check
+
+      - name: Verify Go modules
+        run: |
+          go test ./...
+          go vet ./...
+        working-directory: .
+
+      - name: Verify HyperGnomon fork
+        working-directory: internal/fork/hypergnomon
+        run: go test ./...
+
+      - name: Build release binaries
+        run: |
+          mkdir -p dist
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/hyperwolf-linux .
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/hyperwolf-darwin .
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o dist/hyperwolf-darwin-arm64 .
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/hyperwolf.exe .
+          sha256sum dist/hyperwolf-linux dist/hyperwolf-darwin dist/hyperwolf-darwin-arm64 dist/hyperwolf.exe > dist/SHA256SUMS
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+          name: HyperWolf ${{ github.ref_name }}
+          body: |
+            HyperWolf standalone desktop browser for TELA dApps on DERO.
+
+            Static CGO-disabled binaries and SHA256 checksums are attached.
+          files: |
+            dist/hyperwolf-linux
+            dist/hyperwolf-darwin
+            dist/hyperwolf-darwin-arm64
+            dist/hyperwolf.exe
+            dist/SHA256SUMS

@@ -96,6 +96,48 @@
       return { text };
     }
 
+    // Icon SVGs can come from on-chain contract data. Keep presentation and
+    // internal SVG references, but remove executable content and external
+    // resource references before inserting anything into the dashboard DOM.
+    function sanitizeSvg(svg) {
+      const blockedElements = new Set([
+        "script", "foreignobject", "iframe", "object", "embed", "audio", "video", "base", "link",
+      ]);
+      const blockedAttributes = new Set([
+        "src", "srcset", "action", "formaction", "poster", "xml:base",
+      ]);
+      const elements = [svg, ...svg.querySelectorAll("*")];
+
+      for (const element of elements) {
+        if (blockedElements.has(element.localName.toLowerCase())) {
+          element.remove();
+          continue;
+        }
+
+        for (const attribute of [...element.attributes]) {
+          const name = attribute.name.toLowerCase();
+          const value = attribute.value.trim();
+          const lowerValue = value.toLowerCase();
+          const externalURL = /^(https?:|data:|blob:|javascript:)/i.test(value);
+
+          if (name.startsWith("on") || blockedAttributes.has(name)) {
+            element.removeAttribute(attribute.name);
+          } else if ((name === "href" || name === "xlink:href") && !value.startsWith("#")) {
+            element.removeAttribute(attribute.name);
+          } else if (
+            name === "style" &&
+            (/expression\s*\(/i.test(lowerValue) ||
+              /javascript\s*:/i.test(lowerValue) ||
+              /url\s*\(\s*(?!#)/i.test(lowerValue) ||
+              externalURL)
+          ) {
+            element.removeAttribute(attribute.name);
+          }
+        }
+      }
+      return svg;
+    }
+
     // Raster een SVG-tekst inline in de slot (zonder <img> omzeilt dit ook
     // de base64/gzip-blob-problematiek).
     function renderSvgText(svgText, slot) {
@@ -104,6 +146,7 @@
       host.innerHTML = svgText;
       const svg = host.querySelector("svg");
       if (svg) {
+        sanitizeSvg(svg);
         // width/height zijn read-only getters op SVGSVGElement (strict mode
         // gooit TypeError), dus dimensioneren via inline CSS.
         svg.style.width = "48px";
@@ -157,6 +200,7 @@
       svgContainer.innerHTML = svgContent;
       const actualSvg = svgContainer.querySelector('svg');
       if (actualSvg) {
+        sanitizeSvg(actualSvg);
         actualSvg.style.width = '48px';
         actualSvg.style.height = '48px';
         actualSvg.style.borderRadius = 'var(--radius-lg)';

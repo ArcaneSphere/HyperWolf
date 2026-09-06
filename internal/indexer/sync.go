@@ -16,6 +16,8 @@ import (
 	"github.com/sirupsen/logrus"
 	bolt "go.etcd.io/bbolt"
 
+	"hyperwolf/internal/fileutil"
+
 	hgapi "github.com/hypergnomon/hypergnomon/api"
 	hgindexer "github.com/hypergnomon/hypergnomon/indexer"
 	hgstorage "github.com/hypergnomon/hypergnomon/storage"
@@ -36,6 +38,7 @@ type TelaAppInfo struct {
 
 type SyncManager struct {
 	mu            sync.Mutex // guards Indexer, APIServer, GnomonWS, syncCancel, syncDone
+	lifecycleMu   sync.Mutex // serializes complete StartSync/StopSync transitions
 	Indexer       *hgindexer.Indexer
 	APIServer     *hgapi.Server
 	DBDir         string
@@ -49,6 +52,7 @@ type SyncManager struct {
 	OnHealthChange func(bool)
 	gnomonPort     int
 	gnomonWSPort   int
+	preserveDB     bool
 	GnomonWS       *GnomonWSServer
 	// discoverLastCount tracks the last app count we logged, so repeated
 	// DiscoverTelaApps() polls (status refresh every 5s, sync ticker) don't
@@ -97,6 +101,16 @@ func NewSyncManager(gnomonPort, gnomonWSPort int, sendEvent EventSender) *SyncMa
 	}
 }
 
+// SetPreserveDB enables resuming from the existing HyperGnomon database.
+// The default remains false so existing startup behavior is unchanged.
+func (sm *SyncManager) SetPreserveDB(preserve bool) {
+	sm.preserveDB = preserve
+}
+
+func (sm *SyncManager) shouldWipeDB() bool {
+	return !sm.preserveDB
+}
+
 func (sm *SyncManager) InitStorage() error {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -112,8 +126,12 @@ func (sm *SyncManager) InitStorage() error {
 	// (app-cache.json, a sibling of gnomondb) is intentionally left intact so
 	// the dashboard still shows the previous catalog until FastSync repopulates
 	// the live index.
-	if err := sm.wipeDBDir(); err != nil {
-		log.Printf("Storage: wipe gnomondb: %v (continuing)", err)
+	if sm.shouldWipeDB() {
+		if err := sm.wipeDBDir(); err != nil {
+			log.Printf("Storage: wipe gnomondb: %v (continuing)", err)
+		}
+	} else {
+		log.Printf("Storage: preserving existing gnomondb (--keep-db)")
 	}
 
 	if err := os.MkdirAll(sm.DBDir, 0755); err != nil {
@@ -137,6 +155,9 @@ func (sm *SyncManager) wipeDBDir() error {
 }
 
 func (sm *SyncManager) StartSync(node string) {
+	sm.lifecycleMu.Lock()
+	defer sm.lifecycleMu.Unlock()
+
 	if !strings.HasPrefix(node, "http://") {
 		node = "http://" + node
 	}
@@ -317,7 +338,9 @@ func (sm *SyncManager) runSyncSetup(node string, cancel chan struct{}, done chan
 			}
 		}
 
-		go activeIndexer.StartDaemonMode()
+		if err := activeIndexer.StartDaemonMode(); err != nil {
+			log.Printf("Daemon mode exited: %v", err)
+		}
 	}()
 
 	lastHeight := activeIndexer.LastIndexedHeight.Load()
@@ -399,6 +422,9 @@ func (sm *SyncManager) runSyncSetup(node string, cancel chan struct{}, done chan
 }
 
 func (sm *SyncManager) StopSync() {
+	sm.lifecycleMu.Lock()
+	defer sm.lifecycleMu.Unlock()
+
 	// Cancel and wait for all sync goroutines to exit.
 	sm.mu.Lock()
 	cancel := sm.syncCancel
@@ -408,6 +434,7 @@ func (sm *SyncManager) StopSync() {
 	sm.GnomonWS = nil
 	api := sm.APIServer
 	sm.APIServer = nil
+	idx := sm.Indexer
 	sm.mu.Unlock()
 
 	if cancel != nil {
@@ -427,6 +454,11 @@ func (sm *SyncManager) StopSync() {
 		if err := api.Stop(ctx); err != nil {
 			log.Printf("HyperGnomon API server stop: %v", err)
 		}
+	}
+	// Signal the tracked daemon-mode goroutine before waiting for syncDone.
+	// StopIndexer closes the RPC pool and store only after all workers exit.
+	if idx != nil {
+		idx.Closing.Store(true)
 	}
 	if done != nil {
 		<-done
@@ -478,7 +510,7 @@ func (sm *SyncManager) saveAppCache() {
 		log.Printf("saveAppCache: marshal error: %v", err)
 		return
 	}
-	if err := os.WriteFile(sm.cacheFilePath(), data, 0644); err != nil {
+	if err := fileutil.WriteFileAtomic(sm.cacheFilePath(), data, 0644); err != nil {
 		log.Printf("saveAppCache: write error: %v", err)
 	} else {
 		log.Printf("saveAppCache: saved %d apps", len(apps))

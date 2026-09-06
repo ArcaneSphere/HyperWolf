@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"flag"
@@ -39,6 +40,7 @@ var (
 	gnomonPort    = flag.Int("gnomon-api", 18082, "HyperGnomon API port")
 	gnomonWSPort  = flag.Int("gnomon-ws", 40403, "Gnomon WebSocket JSON-RPC port (TELA apps use this as fallback when XSWD is unavailable)")
 	logFile       = flag.String("log-file", "", "log file path (default: ~/.hyperwolf/hyperwolf.log)")
+	keepDB        = flag.Bool("keep-db", false, "preserve the existing HyperGnomon database instead of wiping it on startup")
 	installFlag   = flag.Bool("install", false, "install desktop entries and autostart, then exit")
 	uninstallFlag = flag.Bool("uninstall", false, "remove all desktop entries and installed binary, then exit")
 )
@@ -89,6 +91,7 @@ func main() {
 	syncMgr := indexer.NewSyncManager(*gnomonPort, *gnomonWSPort, func(msg map[string]any) {
 		hub.Send(msg)
 	})
+	syncMgr.SetPreserveDB(*keepDB)
 	// Mirror passive daemon connectivity loss/recovery to the tray icon.
 	syncMgr.OnHealthChange = tray.SetConnected
 
@@ -185,7 +188,14 @@ func main() {
 			logSvc.Add(router.LogLevelWarn, "Received shutdown signal")
 		case <-shutdownCh:
 		}
+		logSvc.Add(router.LogLevelInfo, "Stopping node synchronization")
+		syncMgr.StopSync()
 		telaProxy.Shutdown()
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Printf("Dashboard shutdown: %v", err)
+		}
+		cancel()
 		logSvc.Add(router.LogLevelInfo, "Shutting down...")
 		tray.Stop()
 	}()

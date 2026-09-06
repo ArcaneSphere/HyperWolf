@@ -832,7 +832,7 @@
   const rssFeedUpdated = document.getElementById("rss-feed-updated");
   
   // State
-  let currentAppVersion = "0.11.0";
+  let currentAppVersion = "0.13.0";
   let rssFeedUrl = "https://dero.world/anotherworld/feed/";
   let updateCheckEnabled = true;
   let rssRefreshInterval = null;
@@ -1009,7 +1009,7 @@
     
     if (updateViewBtn) {
       updateViewBtn.onclick = () => {
-        window.open("https://github.com/Dirtybird99/HyperWolf/releases", "_blank", "noopener,noreferrer");
+        window.open("https://github.com/ArcaneSphere/HyperWolf/releases", "_blank", "noopener,noreferrer");
       };
     }
     

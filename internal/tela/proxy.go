@@ -1,6 +1,7 @@
 package tela
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/civilware/tela"
 )
@@ -26,6 +28,7 @@ type ProxyManager struct {
 	scidLocks map[string]*sync.Mutex // per-SCID mutexes for TOCTOU protection
 	port      int
 	once      sync.Once
+	server    *http.Server
 
 	nodeFn func() string
 }
@@ -49,10 +52,17 @@ func (pm *ProxyManager) Start() {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/add/", pm.handleAddSCID)
 		mux.HandleFunc("/tela/", pm.handleTELA)
+		srv := &http.Server{
+			Addr:    fmt.Sprintf("127.0.0.1:%d", pm.port),
+			Handler: mux,
+		}
+		pm.mu.Lock()
+		pm.server = srv
+		pm.mu.Unlock()
 
 		go func() {
 			log.Printf("TELA proxy listening on :%d", pm.port)
-			if err := http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", pm.port), mux); err != nil {
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Printf("TELA proxy: %v", err)
 			}
 		}()
@@ -77,6 +87,18 @@ func (pm *ProxyManager) GetProxiedSCIDs() []string {
 
 func (pm *ProxyManager) Shutdown() {
 	tela.ShutdownTELA()
+	pm.mu.Lock()
+	srv := pm.server
+	pm.server = nil
+	pm.mu.Unlock()
+	if srv == nil {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		_ = srv.Close()
+	}
 }
 
 func (pm *ProxyManager) Reset() {
@@ -318,11 +340,60 @@ func parseShardRawBytes(doc tela.DOC) ([]byte, error) {
 	return []byte(code[start+3 : end]), nil
 }
 
+// pathWithin returns a path rooted under root and rejects lexical traversal
+// outside that root. TELA shard metadata is chain-provided and must not be
+// allowed to choose arbitrary filesystem destinations.
+func pathWithin(root string, parts ...string) (string, error) {
+	rootAbs, err := filepath.Abs(root)
+	if err != nil {
+		return "", err
+	}
+	candidate := rootAbs
+	for _, part := range parts {
+		if filepath.IsAbs(part) || filepath.VolumeName(part) != "" {
+			return "", fmt.Errorf("absolute path component: %q", part)
+		}
+		candidate = filepath.Join(candidate, part)
+	}
+	candidate, err = filepath.Abs(candidate)
+	if err != nil {
+		return "", err
+	}
+	rel, err := filepath.Rel(rootAbs, candidate)
+	if err != nil {
+		return "", err
+	}
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("path escapes root: %q", filepath.Join(parts...))
+	}
+	current := rootAbs
+	for _, component := range strings.Split(rel, string(filepath.Separator)) {
+		if component == "" || component == "." {
+			continue
+		}
+		current = filepath.Join(current, component)
+		info, err := os.Lstat(current)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return "", err
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			return "", fmt.Errorf("symlink path component: %q", component)
+		}
+	}
+	return candidate, nil
+}
+
 func downloadAndReconstructShards(scid string, index tela.INDEX, telaNode string) (string, error) {
 	log.Printf("[SHARDS] Reconstructing SCID: %s", scid)
 
 	baseName := strings.TrimSuffix(index.DURL, tela.TAG_DOC_SHARDS)
-	appDir := filepath.Join(tela.GetClonePath(), baseName)
+	appDir, err := pathWithin(tela.GetClonePath(), baseName)
+	if err != nil {
+		return "", fmt.Errorf("unsafe TELA app path: %w", err)
+	}
 	if err := os.MkdirAll(appDir, 0755); err != nil {
 		return "", err
 	}
@@ -368,7 +439,10 @@ func downloadAndReconstructShards(scid string, index tela.INDEX, telaNode string
 	}
 
 	for key, g := range groups {
-		dst := filepath.Join(appDir, key)
+		dst, err := pathWithin(appDir, key)
+		if err != nil {
+			return "", fmt.Errorf("unsafe TELA shard path: %w", err)
+		}
 		if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
 			return "", err
 		}

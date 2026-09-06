@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend tooling
+        run: npm ci
+
+      - name: Run frontend guardrails
+        run: npm run check
+
+      - name: Test root module
+        run: go test ./...
+
+      - name: Run root race tests
+        run: go test -race ./...
+
+      - name: Vet root module
+        run: go vet ./...
+
+      - name: Test HyperGnomon fork module
+        working-directory: internal/fork/hypergnomon
+        run: go test ./...
+
+      - name: Build static binary
+        run: CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o hyperwolf .
+
+  native:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Test native platform build
+        run: go test ./...
+
+      - name: Build native binary
+        run: go build -trimpath -o hyperwolf .

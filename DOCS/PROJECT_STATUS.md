@@ -1,7 +1,7 @@
 # PROJECT STATUS — HyperWolf UI / LLM-vriendelijkheid
 
 **Snapshot datum:** 2026-09-05 (guardrails-sessie: canonical-ownership checker live; daarvoor Fase 3 + commit `db55563`)
-**Versie:** 0.11.0 (single source: `internal/buildinfo/version.go`)
+**Versie:** 0.13.0 (single source: `internal/buildinfo/version.go`)
 **Module:** `hyperwolf` (Go 1.26.0), `//go:embed web/*` in `main.go:28`
 
 ---
@@ -181,6 +181,6 @@ De `subjectTokenRules`-scan (rule-subject i.p.v. elk klasse-voorkomen) toonde 11
 | `web/ui/components/` | 19 dirs (11 bestaand + 8 nieuw) |
 | `web/ui/registry.js` + `registry.json` | 19 componenten; `npm run registry` |
 | `web/tokens.css` | design tokens |
-| `internal/buildinfo/version.go` | versie 0.11.0 |
+| `internal/buildinfo/version.go` | versie 0.13.0 |
 | `~/.local/bin/hyperwolf` | geïnstalleerde binary (PID 325539) |
 | `DOCS/PROJECT_STATUS.md` | dit bestand |

@@ -114,17 +114,37 @@ func (s *Server) loadReorgDetected() int64 {
 	return s.reorgDetected.Load()
 }
 
-// corsMiddleware adds permissive CORS headers to every response and handles
-// OPTIONS preflight requests before they reach the router. It must be the
-// OUTERMOST handler; otherwise gorilla/mux method-matching returns 405 for
-// OPTIONS before any CORS code runs.
+func isLoopbackOrigin(raw string) bool {
+	u, err := url.Parse(raw)
+	if err != nil || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" {
+		return false
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return false
+	}
+	host := strings.ToLower(u.Hostname())
+	return host == "localhost" || host == "127.0.0.1" || host == "::1"
+}
+
+// corsMiddleware permits dashboard and TELA browser clients on loopback while
+// preventing arbitrary websites from reading this local API. It must be the
+// OUTERMOST handler so OPTIONS is handled before gorilla/mux method matching.
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		origin := r.Header.Get("Origin")
+		allowed := origin == "" || isLoopbackOrigin(origin)
+		if origin != "" && allowed {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		}
 
 		if r.Method == http.MethodOptions {
+			if !allowed {
+				http.Error(w, "CORS origin denied", http.StatusForbidden)
+				return
+			}
 			w.WriteHeader(http.StatusOK)
 			return
 		}

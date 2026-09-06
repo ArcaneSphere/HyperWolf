@@ -138,6 +138,7 @@ HyperWolf supports several command-line flags for advanced configuration:
 | `--tela-port` | `18081` | TELA proxy listen port |
 | `--gnomon-api` | `18082` | HyperGnomon API server port |
 | `--log-file` | `~/.hyperwolf/hyperwolf.log` | Log file path |
+| `--keep-db` | `false` | Preserve the existing HyperGnomon database instead of wiping it on startup |
 | `--install` | — | Install desktop entries + autostart, then exit |
 | `--uninstall` | — | Remove all desktop entries and installed binary, then exit |
 
@@ -146,6 +147,9 @@ HyperWolf supports several command-line flags for advanced configuration:
 ```bash
 # Custom ports
 ./hyperwolf --dashboard-port 8080 --tela-port 8081 --gnomon-api 8082
+
+# Resume from the existing HyperGnomon database instead of starting clean
+./hyperwolf --keep-db
 
 # Install as desktop application
 ./hyperwolf --install
@@ -197,6 +201,9 @@ Settings are stored in `~/.hyperwolf/config.json`. This file is created automati
 | `~/.hyperwolf/config.json` | App settings and bookmarks |
 | `~/.hyperwolf/hyperwolf.log` | Application log |
 | `~/.hyperwolf/gnomondb/` | HyperGnomon index database |
+
+By default, HyperWolf wipes `gnomondb/` on startup and performs a clean FastSync.
+Use `--keep-db` to preserve the existing index and allow HyperGnomon to resume.
 
 ---
 
@@ -327,8 +334,9 @@ HyperWolf can install itself as a first-class desktop application on all three m
 
 HyperWolf is in **beta** — actively used but evolving. The core feature set (TELA browsing, search, system tray, desktop integration) is stable.
 
-**Version:** 0.11.0  
-**License:** [MIT](LICENSE)  
+**Version:** 0.13.0
+
+**License:** [MIT](LICENSE)
 
 ### Roadmap Ideas
 
@@ -358,7 +366,7 @@ Please see [CONTRIBUTING.md](.github/CONTRIBUTING.md) for our code of conduct an
 HyperWolf stands on the shoulders of these excellent projects:
 
 - **[Azylem TELA](https://github.com/Azylem/tela)** — TELA server (fork of civilware/tela)
-- **[HyperGnomon](https://github.com/Dirtybird99/HyperGnomon)** — Blockchain indexer for SCID discovery
+- **[HyperGnomon](https://github.com/ArcaneSphere/HyperGnomon)** — Blockchain indexer for SCID discovery
 - **[gogpu/systray](https://github.com/gogpu/systray)** — Zero-CGO cross-platform system tray library
 - **[gorilla/websocket](https://github.com/gorilla/websocket)** — WebSocket server for real-time dashboard push
 - **[Fuse.js](https://fusejs.io/)** — Client-side fuzzy search library

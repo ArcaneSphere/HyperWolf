@@ -6,7 +6,10 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "registry": "node web/ui/registry.js",
-    "check": "node web/ui/guardrails.cjs"
+    "check": "node web/ui/guardrails.cjs",
+    "smoke": "node scripts/browser-smoke.mjs",
+    "smoke:search": "node scripts/browser-smoke.mjs --interactive",
+    "smoke:tela": "node scripts/browser-smoke.mjs --tela"
   },
   "devDependencies": {
     "@storybook/addon-docs": "^8.4.2",
