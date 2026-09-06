@@ -1834,3 +1834,556 @@ body.g-instagram {
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   EXPLORER PAGE (page-level; component-owned selectors live in
+   web/ui/components/Explorer*/...css)
+   Visual language mirrors the Search page: glass sticky toolbar,
+   pill search box, card surfaces, small-caps eyebrows, staggered
+   entrance motion, hover lift.
+   ============================================================ */
+#page-explorer.exp-page {
+  max-width: 1200px;
+}
+
+/* ---- Toolbar (Search page .search-sticky treatment) ---- */
+
+#page-explorer .exp-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 20px;
+  margin-bottom: 22px;
+  background: var(--surface-search-sticky);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+/* ---- Search box (Search page #searchBox pill) ---- */
+
+#page-explorer .exp-search {
+  flex: 1 1 360px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 18px;
+  background: var(--surface-search-box);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-secondary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+#page-explorer .exp-search:hover {
+  border-color: var(--color-border-2);
+}
+
+#page-explorer .exp-search:focus-within {
+  border-color: var(--c-orange);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+  transform: translateY(-1px);
+}
+
+#page-explorer .exp-search svg {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+#page-explorer .exp-search:focus-within svg {
+  color: var(--c-orange);
+  transform: scale(1.08);
+}
+
+#page-explorer .exp-search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+#page-explorer .exp-search input::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+
+/* ---- Tabs (segmented-chip control, Search page chip language) ---- */
+
+#page-explorer .exp-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-search-box);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+#page-explorer .exp-tab {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--color-text-secondary);
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease;
+}
+
+#page-explorer .exp-tab:hover {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+#page-explorer .exp-tab.active {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+/* ---- Content ---- */
+
+#page-explorer .exp-content {
+  padding-bottom: var(--space-8);
+}
+
+/* ---- Entrance motion (Search result-card stagger) ---- */
+
+@keyframes exp-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+#page-explorer .exp-heading,
+#page-explorer .exp-stats-grid > *,
+#page-explorer .exp-section,
+#page-explorer .exp-kvwrap,
+#page-explorer .exp-panel,
+#page-explorer .exp-pager {
+  animation: exp-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+#page-explorer .exp-stats-grid > *:nth-child(1)  { animation-delay: 0.05s; }
+#page-explorer .exp-stats-grid > *:nth-child(2)  { animation-delay: 0.10s; }
+#page-explorer .exp-stats-grid > *:nth-child(3)  { animation-delay: 0.15s; }
+#page-explorer .exp-stats-grid > *:nth-child(4)  { animation-delay: 0.20s; }
+#page-explorer .exp-stats-grid > *:nth-child(5)  { animation-delay: 0.25s; }
+#page-explorer .exp-stats-grid > *:nth-child(6)  { animation-delay: 0.30s; }
+#page-explorer .exp-stats-grid > *:nth-child(7)  { animation-delay: 0.35s; }
+#page-explorer .exp-stats-grid > *:nth-child(8)  { animation-delay: 0.40s; }
+#page-explorer .exp-stats-grid > *:nth-child(9)  { animation-delay: 0.45s; }
+#page-explorer .exp-stats-grid > *:nth-child(n+10) { animation-delay: 0.50s; }
+
+@media (prefers-reduced-motion: reduce) {
+  #page-explorer .exp-heading,
+  #page-explorer .exp-stats-grid > *,
+  #page-explorer .exp-section,
+  #page-explorer .exp-kvwrap,
+  #page-explorer .exp-panel,
+  #page-explorer .exp-pager {
+    animation: none;
+  }
+}
+
+/* ---- Stats grid (Search card tiles) ---- */
+
+#page-explorer .exp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width), 1fr));
+  gap: 12px;
+  margin-bottom: var(--space-6);
+}
+
+/* ---- Sections ---- */
+
+#page-explorer .exp-section {
+  background: var(--surface-result);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-search-card);
+  overflow: hidden;
+  margin-bottom: var(--space-6);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+#page-explorer .exp-section:hover {
+  border-color: var(--color-border-2);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Result-page content cards: clean, borderless (mirrors the
+   Search page where result rows carry no border line) */
+#page-explorer .exp-kvwrap,
+#page-explorer .exp-panel {
+  margin-bottom: var(--space-5);
+}
+
+/* ---- Section headers ---- */
+
+#page-explorer .exp-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--color-border-2);
+  background: linear-gradient(180deg, var(--syn-function-soft), transparent);
+}
+
+/* Result-page panel/kv titles are real page headings */
+#page-explorer .exp-kv-title,
+#page-explorer .exp-panel-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 18px 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+  text-transform: none;
+  color: var(--color-text);
+  margin: 0;
+}
+
+#page-explorer .exp-panel-title {
+  display: block;
+}
+
+/* Overview section eyebrow stays small-caps */
+#page-explorer .exp-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--syn-function);
+  margin: 0;
+}
+
+#page-explorer .exp-section-more {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* ---- Page headings (typographic hierarchy) ---- */
+
+#page-explorer .exp-heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 0 0 var(--space-4);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+  margin: 0;
+}
+
+#page-explorer .exp-heading-sub {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+}
+
+/* ---- Tables ---- */
+
+#page-explorer .exp-table-wrap {
+  overflow: hidden;
+}
+
+#page-explorer .exp-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+#page-explorer .exp-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--syn-function);
+  border-bottom: 1px solid var(--color-border-2);
+  background: var(--syn-function-soft);
+  font-weight: 600;
+  white-space: normal;
+  word-break: break-all;
+}
+
+#page-explorer .exp-table th:not(:first-child) {
+  text-align: right;
+}
+
+#page-explorer .exp-table th:first-child,
+#page-explorer .exp-table td:first-child {
+  text-align: left;
+}
+
+#page-explorer .exp-table td {
+  padding: 10px 16px;
+  font-size: 13px;
+  white-space: normal;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+#page-explorer .exp-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+#page-explorer .exp-empty-row td {
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: var(--space-8) var(--space-4);
+}
+
+/* ---- Pagination / refresh (ghost buttons) ---- */
+
+#page-explorer .exp-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4) 0 var(--space-5);
+}
+
+#page-explorer .exp-pager-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  min-width: 120px;
+  text-align: center;
+}
+
+#page-explorer .exp-pager-btn,
+#page-explorer .exp-retry {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border-2);
+  border-radius: var(--radius);
+  color: var(--color-text-secondary);
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+#page-explorer .exp-pager-btn:hover:not(:disabled),
+#page-explorer .exp-retry:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+#page-explorer .exp-pager-btn:active:not(:disabled),
+#page-explorer .exp-retry:active {
+  transform: translateY(1px);
+}
+
+#page-explorer .exp-pager-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+#page-explorer .exp-refresh {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2) 0 var(--space-4);
+}
+
+/* ---- Error / note / empty-ish states ---- */
+
+#page-explorer .exp-error {
+  margin: var(--space-8) auto;
+  max-width: 520px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-8) var(--space-6);
+  animation: exp-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+#page-explorer .exp-note {
+  margin: var(--space-4) 0;
+  padding: var(--space-4) var(--space-5);
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: var(--leading-relaxed);
+}
+
+/* ---- Breadcrumb ---- */
+
+#page-explorer .exp-crumb {
+  padding: 0 0 var(--space-4);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+}
+
+#page-explorer .exp-crumb-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--syn-comment);
+}
+
+#page-explorer .exp-link {
+  color: var(--color-accent);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+#page-explorer .exp-link:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+/* ---- Key-value card ---- */
+
+#page-explorer .exp-kv {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+#page-explorer .exp-kv td {
+  padding: 10px 18px;
+  font-size: 13px;
+  vertical-align: top;
+  word-break: break-all;
+}
+
+#page-explorer .exp-kv tbody tr:last-child td {
+  border-bottom: none;
+}
+
+#page-explorer .exp-kv-key {
+  width: 220px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10px;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+#page-explorer .exp-kv-val {
+  font-family: var(--font-mono);
+  color: var(--color-text);
+}
+
+/* ---- Code ---- */
+
+#page-explorer .exp-code {
+  margin: 0;
+  padding: var(--space-4);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: var(--leading-relaxed);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+/* Undo the global `code` element styling (green tint, orange text,
+   padding) so the highlighted block renders as plain text */
+#page-explorer .exp-code code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  letter-spacing: 0;
+  box-shadow: none;
+}
+
+/* DERO source tokens (tokenizer emits these spans) */
+#page-explorer .exp-code .hl-kw {
+  color: var(--syn-keyword);
+}
+#page-explorer .exp-code .hl-str {
+  color: var(--c-yellow);
+}
+#page-explorer .exp-code .hl-num {
+  color: var(--syn-number);
+}
+#page-explorer .exp-code .hl-cmt {
+  color: var(--syn-comment);
+  font-style: italic;
+}
+#page-explorer .exp-code .hl-op {
+  color: var(--syn-operator);
+}
+
+/* ---- Spinner / utilities ---- */
+
+#page-explorer .exp-spinner {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--color-accent);
+  font-size: var(--text-2xl);
+  animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.2; }
+}
+
+#page-explorer .mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+#page-explorer .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+  #page-explorer .exp-toolbar {
+    position: static;
+  }
+  #page-explorer .exp-search {
+    min-height: 42px;
+  }
+  #page-explorer .exp-kv-key {
+    width: 140px;
+  }
+}

@@ -53,6 +53,22 @@ jobs:
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/hyperwolf.exe .
           sha256sum dist/hyperwolf-linux dist/hyperwolf-darwin dist/hyperwolf-darwin-arm64 dist/hyperwolf.exe > dist/SHA256SUMS
 
+      - name: Compose release notes
+        id: release_notes
+        run: |
+          SUBJ=$(git log -1 --pretty=%s)
+          BODY=$(git log -1 --pretty=%b)
+          if [ -z "$BODY" ]; then
+            NOTES="${SUBJ}"
+          else
+            NOTES="${SUBJ}"$'\n\n'"${BODY}"
+          fi
+          {
+            echo "notes<<EOF"
+            echo "$NOTES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
@@ -60,7 +76,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: HyperWolf ${{ github.ref_name }}
           body: |
-            HyperWolf standalone desktop browser for TELA dApps on DERO.
+            ${{ steps.release_notes.outputs.notes }}
 
             Static CGO-disabled binaries and SHA256 checksums are attached.
           files: |

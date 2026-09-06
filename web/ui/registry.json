@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-06T11:44:38.563Z",
+  "generatedAt": "2026-09-06T21:28:19.973Z",
   "version": 1,
   "purpose": "LLM UI registry: which component to use when, and what it relates to.",
-  "componentCount": 19,
+  "componentCount": 22,
   "components": [
     {
       "name": "BookmarkItem",
@@ -30,6 +30,73 @@
         "Stack"
       ],
       "module": "UI.BookmarkItem"
+    },
+    {
+      "name": "ExplorerBlockRow",
+      "group": "Explorer",
+      "title": "Explorer/ExplorerBlockRow",
+      "path": "ui/components/ExplorerBlockRow/ExplorerBlockRow.stories.js",
+      "description": "Table row for a DERO block header: topoheight, height, short hash link, tx count, reward, age.",
+      "useWhen": [
+        "Block list tables in the explorer (overview + blocks view)"
+      ],
+      "avoidWhen": [
+        "Transactions — use ExplorerTxRow",
+        "Non-table block cards"
+      ],
+      "related": [
+        "ExplorerStat",
+        "ExplorerTxRow"
+      ],
+      "stories": [
+        "Headers"
+      ],
+      "module": "UI.ExplorerBlockRow"
+    },
+    {
+      "name": "ExplorerStat",
+      "group": "Explorer",
+      "title": "Explorer/ExplorerStat",
+      "path": "ui/components/ExplorerStat/ExplorerStat.stories.js",
+      "description": "Stat tile for the chain explorer: mono value + uppercase label + muted sub-line.",
+      "useWhen": [
+        "Explorer overview stat grids",
+        "Any key/value/status tile in a panel"
+      ],
+      "avoidWhen": [
+        "Small inline status chips — use StatusDot or TagChip"
+      ],
+      "related": [
+        "ExplorerBlockRow",
+        "ExplorerTxRow",
+        "StatusCard",
+        "TagChip"
+      ],
+      "stories": [
+        "Default"
+      ],
+      "module": "UI.ExplorerStat"
+    },
+    {
+      "name": "ExplorerTxRow",
+      "group": "Explorer",
+      "title": "Explorer/ExplorerTxRow",
+      "path": "ui/components/ExplorerTxRow/ExplorerTxRow.stories.js",
+      "description": "Table row for a DERO transaction: short hash link, type badge, fee, ring size, size, signer, block link, age. Pooled rows get a leading status dot.",
+      "useWhen": [
+        "Tx tables in the explorer (block detail, mempool, address history)"
+      ],
+      "avoidWhen": [
+        "Blocks — use ExplorerBlockRow"
+      ],
+      "related": [
+        "ExplorerBlockRow",
+        "ExplorerStat"
+      ],
+      "stories": [
+        "Types"
+      ],
+      "module": "UI.ExplorerTxRow"
     },
     {
       "name": "HexIcon",
@@ -213,7 +280,7 @@
       "group": "Search",
       "title": "Search/ResultRow",
       "path": "ui/components/ResultRow/ResultRow.stories.js",
-      "description": "Compact representation of one search result with icon, domain, name, SCID, description, rating and bookmark.",
+      "description": "Compact representation of one search result with icon, domain, name, SCID, description, rating, bookmark and copy/explorer actions.",
       "useWhen": [
         "Displaying search results",
         "Listing DERO TELA apps with ratings"

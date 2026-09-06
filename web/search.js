@@ -585,6 +585,8 @@
     filtered.forEach(r => {
       const row = UI.ResultRow(r, {
         onClick: handleSCIDClick,
+        onCopy: (scid) => copySCID(scid),
+        onExplore: (scid) => openInExplorer(scid),
         onBookmark: (scid) => {
           if (typeof window.toggleSearchBookmark === "function") window.toggleSearchBookmark(scid);
         },
@@ -617,6 +619,36 @@
     if (scidInput) { scidInput.value = scid; scidInput.dispatchEvent(new Event("input")); }
     const directLoad = typeof window.getDirectLoadSetting === "function" ? window.getDirectLoadSetting() : true;
     if (directLoad && loadBtn) loadBtn.click();
+  }
+
+  // Copy the SCID to the clipboard with a legacy execCommand fallback for
+  // non-secure contexts (http:// LAN daemons) where navigator.clipboard is
+  // unavailable, then surface a toast so the action is visible.
+  function copySCID(scid) {
+    const done = () => {
+      if (typeof window.pushToast === "function") window.pushToast("connected", `Copied ${scid.slice(0, 8)}… to clipboard`);
+    };
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = scid;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); } catch (err) { /* ignore */ }
+      ta.remove();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(scid).then(done).catch(fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  // Jump to the Explorer page and run a search for this SCID there.
+  function openInExplorer(scid) {
+    if (typeof window.navigateTo === "function") window.navigateTo("explorer");
+    if (typeof window.openExplorerSearch === "function") window.openExplorerSearch(scid);
   }
 
   function renderSuggestions(results) {

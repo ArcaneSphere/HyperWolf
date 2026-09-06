@@ -26,6 +26,9 @@
   <link rel="stylesheet" href="ui/components/LogEntry/LogEntry.css">
   <link rel="stylesheet" href="ui/components/NoResults/NoResults.css">
   <link rel="stylesheet" href="ui/components/StatusDot/StatusDot.css">
+  <link rel="stylesheet" href="ui/components/ExplorerStat/ExplorerStat.css">
+  <link rel="stylesheet" href="ui/components/ExplorerBlockRow/ExplorerBlockRow.css">
+  <link rel="stylesheet" href="ui/components/ExplorerTxRow/ExplorerTxRow.css">
 </head>
 <body>
   <div id="scid-loader"><div class="bar"></div></div>
@@ -90,6 +93,10 @@
         <span class="nav-icon">⭐</span>
         <span class="nav-text">Bookmarks</span>
         <span class="nav-badge" id="bookmark-badge"></span>
+      </div>
+      <div class="nav-item" data-page="explorer">
+        <span class="nav-icon">🔗</span>
+        <span class="nav-text">Explorer</span>
       </div>
       <div class="nav-item" data-page="settings">
         <span class="nav-icon">⚙️</span>
@@ -382,6 +389,25 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div id="page-explorer" class="page">
+        <h2>Explorer</h2>
+        <div class="exp-toolbar">
+          <div class="exp-search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input id="exp-search-input" type="text" placeholder="Search height, block hash, tx hash, SCID, or address..." spellcheck="false" autocomplete="off">
+          </div>
+          <div class="exp-tabs" id="exp-tabs">
+            <button class="exp-tab active" data-tab="overview">Overview</button>
+            <button class="exp-tab" data-tab="blocks">Blocks</button>
+            <button class="exp-tab" data-tab="mempool">Mempool</button>
+          </div>
+        </div>
+        <div id="exp-content" class="exp-content"></div>
       </div>
 
       <div id="page-bookmarks" class="page">
@@ -742,6 +768,9 @@
   <script src="ui/components/HexIcon/HexIcon.js"></script>
   <script src="ui/components/ResultRow/ResultRow.js"></script>
   <script src="ui/components/StatusDot/StatusDot.js"></script>
+  <script src="ui/components/ExplorerStat/ExplorerStat.js"></script>
+  <script src="ui/components/ExplorerBlockRow/ExplorerBlockRow.js"></script>
+  <script src="ui/components/ExplorerTxRow/ExplorerTxRow.js"></script>
   <script src="ui/components/Toast/Toast.js"></script>
   <script src="ui/components/NoResults/NoResults.js"></script>
   <script src="ui/components/LogEntry/LogEntry.js"></script>
@@ -761,5 +790,6 @@
   <script src="dashboard.js"></script>
   <script src="fuse.min.js"></script>
   <script src="search.js"></script>
+  <script src="explorer.js"></script>
 </body>
 </html>

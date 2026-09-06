@@ -23,12 +23,16 @@
    * @param {Object=} handlers
    * @param {(scid: string) => void} handlers.onClick
    * @param {(scid: string) => void} handlers.onBookmark
+   * @param {(scid: string) => void} handlers.onCopy
+   * @param {(scid: string) => void} handlers.onExplore
    * @param {boolean=} handlers.bookmarked — resolved bookmark state (overrides r.bookmarked)
    * @returns {HTMLElement} div.result
    */
   UI.ResultRow = function ResultRow(r, handlers = {}) {
     const onClick = handlers.onClick || (() => {});
     const onBookmark = handlers.onBookmark || (() => {});
+    const onCopy = handlers.onCopy || (() => {});
+    const onExplore = handlers.onExplore || (() => {});
     const saved = handlers.bookmarked !== undefined ? handlers.bookmarked : !!(r.bookmarked);
 
     const div = document.createElement("div");
@@ -304,8 +308,14 @@
 
     content.append(urlEl, nameEl, scidEl, descrEl, ratingEl);
 
+    const actions = document.createElement("div");
+    actions.className = "result-actions";
+
     const bookmarkBtn = document.createElement("button");
     bookmarkBtn.className = "result-bookmark";
+    bookmarkBtn.type = "button";
+    bookmarkBtn.title = saved ? "Remove bookmark" : "Add bookmark";
+    bookmarkBtn.setAttribute("aria-label", bookmarkBtn.title);
     bookmarkBtn.textContent = saved ? "★" : "☆";
     bookmarkBtn.classList.toggle("saved", saved);
     bookmarkBtn.onclick = (e) => {
@@ -313,7 +323,29 @@
       onBookmark(r.scid);
     };
 
-    div.append(iconSlot, content, bookmarkBtn);
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "result-copy";
+    copyBtn.type = "button";
+    copyBtn.title = "Copy SCID";
+    copyBtn.textContent = "Copy";
+    copyBtn.onclick = (e) => {
+      e.stopPropagation();
+      onCopy(r.scid);
+    };
+
+    const exploreBtn = document.createElement("button");
+    exploreBtn.className = "result-explore";
+    exploreBtn.type = "button";
+    exploreBtn.title = "Open in explorer";
+    exploreBtn.textContent = "Explorer";
+    exploreBtn.onclick = (e) => {
+      e.stopPropagation();
+      onExplore(r.scid);
+    };
+
+    actions.append(copyBtn, exploreBtn, bookmarkBtn);
+
+    div.append(iconSlot, content, actions);
     return div;
   };
 })();

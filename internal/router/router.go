@@ -16,10 +16,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"hyperwolf/internal/buildinfo"
 	"hyperwolf/internal/daemon"
+	"hyperwolf/internal/explorer"
 	"hyperwolf/internal/fileutil"
 	"hyperwolf/internal/indexer"
 	"hyperwolf/internal/state"
@@ -37,6 +39,8 @@ type Handlers struct {
 	OnConnected func(bool)
 	ShutdownCh  chan<- struct{}
 	LogService  *LogService
+	expMu       *sync.Mutex
+	exps        map[string]*explorer.Client
 }
 
 func NewServer(addr string, webFS fs.FS, h *Handlers) *http.Server {
@@ -81,6 +85,16 @@ func NewServer(addr string, webFS fs.FS, h *Handlers) *http.Server {
 
 	// Logs
 	mux.HandleFunc("GET /api/logs", h.handleGetLogs)
+
+	// Blockchain explorer API
+	mux.HandleFunc("GET /api/explorer/stats", h.handleExplorerStats)
+	mux.HandleFunc("GET /api/explorer/blocks", h.handleExplorerBlocks)
+	mux.HandleFunc("GET /api/explorer/block/{id}", h.handleExplorerBlock)
+	mux.HandleFunc("GET /api/explorer/tx/{hash}", h.handleExplorerTx)
+	mux.HandleFunc("GET /api/explorer/mempool", h.handleExplorerMempool)
+	mux.HandleFunc("GET /api/explorer/sc/{scid}", h.handleExplorerSC)
+	mux.HandleFunc("GET /api/explorer/address/{addr}", h.handleExplorerAddress)
+	mux.HandleFunc("GET /api/explorer/search", h.handleExplorerSearch)
 
 	// TELA proxy routes are handled by the TELA package on its own port,
 	// but we also proxy /tela/ and /add/ through this server for convenience.

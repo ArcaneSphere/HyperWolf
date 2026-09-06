@@ -101,8 +101,8 @@ func FetchSCIDVariables(node string, scids []string) []SCIDVarData {
 	}
 	type daemonResp struct {
 		Result *struct {
-			StringKeys map[string]any   `json:"stringkeys"`
-			Uint64Keys map[string]any   `json:"uint64keys"`
+			StringKeys map[string]any `json:"stringkeys"`
+			Uint64Keys map[string]any `json:"uint64keys"`
 		} `json:"result"`
 		Error *struct {
 			Code    int    `json:"code"`

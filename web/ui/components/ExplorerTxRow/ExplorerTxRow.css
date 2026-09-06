@@ -1,0 +1,126 @@
+/* ============================================================
+   ExplorerTxRow.css
+   Canonical owner of the .explorer-tx-row rules. Soft hover
+   wash (animated via td) + per-row staggered entrance (opacity
+   only, to avoid transform quirks on table rows).
+   ============================================================ */
+
+.explorer-tx-row {
+  animation: row-in 0.4s ease both;
+}
+
+.explorer-tx-row:nth-child(1)  { animation-delay: 0.03s; }
+.explorer-tx-row:nth-child(2)  { animation-delay: 0.06s; }
+.explorer-tx-row:nth-child(3)  { animation-delay: 0.09s; }
+.explorer-tx-row:nth-child(4)  { animation-delay: 0.12s; }
+.explorer-tx-row:nth-child(5)  { animation-delay: 0.15s; }
+.explorer-tx-row:nth-child(6)  { animation-delay: 0.18s; }
+.explorer-tx-row:nth-child(7)  { animation-delay: 0.21s; }
+.explorer-tx-row:nth-child(8)  { animation-delay: 0.24s; }
+.explorer-tx-row:nth-child(9)  { animation-delay: 0.27s; }
+.explorer-tx-row:nth-child(10) { animation-delay: 0.30s; }
+.explorer-tx-row:nth-child(n+11) { animation-delay: 0.33s; }
+
+@keyframes row-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explorer-tx-row { animation: none; }
+}
+
+.explorer-tx-row td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--hairline);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.explorer-tx-row:hover td {
+  background: var(--color-panel-2);
+}
+
+.explorer-tx-row .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.explorer-tx-row .mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.explorer-tx-row .muted {
+  color: var(--color-muted);
+}
+
+.explorer-tx-row .tx-hash-link,
+.explorer-tx-row .block-link {
+  color: var(--color-info);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.explorer-tx-row .tx-hash-link:hover,
+.explorer-tx-row .block-link:hover {
+  color: var(--color-info-soft, var(--color-info));
+  text-decoration: underline;
+}
+
+.explorer-tx-row .tx-type {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: var(--radius-full, 999px);
+  font-size: var(--text-2xs, 11px);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: transform 0.15s ease;
+}
+
+.explorer-tx-row:hover .tx-type {
+  transform: scale(1.04);
+}
+
+.explorer-tx-row .tx-type-coinbase {
+  color: #f5b301;
+  background: rgba(245, 179, 1, 0.12);
+}
+
+.explorer-tx-row .tx-type-sc {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.14);
+}
+
+.explorer-tx-row .tx-type-burn {
+  color: #fb7185;
+  background: rgba(251, 113, 133, 0.14);
+}
+
+.explorer-tx-row .tx-type-reg {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.14);
+}
+
+.explorer-tx-row .tx-type-premine {
+  color: #f5b301;
+  background: rgba(245, 179, 1, 0.12);
+}
+
+.explorer-tx-row .tx-type-normal {
+  color: var(--color-muted);
+  background: var(--color-panel-2);
+}
+
+.explorer-tx-row.in-pool td:first-child::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background: var(--color-warning, #f5b301);
+}

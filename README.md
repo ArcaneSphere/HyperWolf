@@ -38,6 +38,7 @@ HyperWolf is a **standalone desktop application** for browsing, searching, and l
 |---|---|
 | 🌐 **Browse TELA dApps** | Browse and interact with on-chain web apps — HTML, CSS, JS, assets — served as real web pages |
 | 🔍 **Search & Discover** | Fuzzy-search the TELA app catalog via the bundled HyperGnomon indexer (Fuse.js frontend) |
+| 🔭 **Chain Explorer** | On-chain explorer for blocks, transactions, smart contracts, and wallet addresses — with syntax-highlighted contract source |
 | ⚡ **Real-Time Updates** | WebSocket-powered dashboard shows sync progress, new app discoveries, and health status |
 | 📡 **Connect Any DERO Node** | Point HyperWolf at any DERO daemon — local or remote — and start browsing |
 | 🖥️ **System Tray App** | Runs in the background with a clickable tray icon, connection status LED, and quick controls |
@@ -115,6 +116,19 @@ Click any search result or paste a full 64-hex SCID into the input field. HyperW
 1. Fetches the contract from the DERO chain
 2. Serves it via the local TELA proxy (`http://127.0.0.1:18081/tela/{scid}/`)
 3. Opens a new browser tab with the live dApp
+
+### Exploring the DERO Chain
+
+The **Explorer** page pairs with Search to give you a full on-chain view:
+
+- **Overview** — live network stats (height, difficulty, block time, supply, connections, mempool) plus the most recent blocks and pooled transactions
+- **Smart search** — paste a **height**, **block hash**, **transaction hash**, **SCID**, or **wallet address** into the search bar and HyperWolf resolves it to the correct page automatically (no prefixes needed)
+- **Blocks & Mempool** — browse the block map (height, hash, reward, size, age) and the current mempool with colored transaction-type badges
+- **Block → Tx → SC drill-down** — open any block's transactions, any transaction's inputs/outputs/fees, and any contract's balance, string/uint64 variable keys, and balances
+- **Syntax-highlighted contract code** — contract source is rendered with real token coloring (keywords, strings, numbers, comments, operators) instead of plain monochrome text
+- **Address lookup** — inspect a wallet address's balance and transaction history
+
+Every explorer result stays **scrollbar-free**: long hashes and code wrap to the next line at the container edge, so the only scrollbar is the page's own. Because a smart contract's SCID *is* its install-transaction hash, HyperWolf queries the SCID on-chain to reliably separate `SC` results from ordinary `tx` results.
 
 ### Connecting from Another Machine
 
@@ -334,7 +348,7 @@ HyperWolf can install itself as a first-class desktop application on all three m
 
 HyperWolf is in **beta** — actively used but evolving. The core feature set (TELA browsing, search, system tray, desktop integration) is stable.
 
-**Version:** 0.13.1
+**Version:** 0.15.0
 
 **License:** [MIT](LICENSE)
 

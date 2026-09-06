@@ -18,7 +18,7 @@ export default {
   title: "Search/ResultRow",
   parameters: {
     llm: {
-      description: "Compact representation of one search result with icon, domain, name, SCID, description, rating and bookmark.",
+      description: "Compact representation of one search result with icon, domain, name, SCID, description, rating, bookmark and copy/explorer actions.",
       useWhen: ["Displaying search results", "Listing DERO TELA apps with ratings"],
       avoidWhen: ["Displaying more than ~20 items", "Showing complex tabular data"],
       related: ["HexIcon", "SearchCard", "StatusBadge", "LatestFindItem"],
@@ -30,7 +30,11 @@ export const Default = () => {
   const UI = window.UI;
   const root = document.createElement("div");
   root.style.maxWidth = "720px";
-  root.appendChild(UI.ResultRow(sample, { onClick: (s) => console.log("load", s) }));
+  root.appendChild(UI.ResultRow(sample, {
+    onClick: (s) => console.log("load", s),
+    onCopy: (s) => console.log("copy", s),
+    onExplore: (s) => console.log("explore", s),
+  }));
   return root;
 };
 

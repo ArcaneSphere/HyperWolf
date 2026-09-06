@@ -1,0 +1,70 @@
+/* ============================================================
+   ExplorerBlockRow.css
+   Canonical owner of the .explorer-block-row rules. The row is
+   placed inside the page-level .exp-table wrapper. Soft hover
+   wash (animated via td) + per-row staggered entrance (opacity
+   only, to avoid transform quirks on table rows).
+   ============================================================ */
+
+.explorer-block-row {
+  animation: row-in 0.4s ease both;
+}
+
+.explorer-block-row:nth-child(1)  { animation-delay: 0.03s; }
+.explorer-block-row:nth-child(2)  { animation-delay: 0.06s; }
+.explorer-block-row:nth-child(3)  { animation-delay: 0.09s; }
+.explorer-block-row:nth-child(4)  { animation-delay: 0.12s; }
+.explorer-block-row:nth-child(5)  { animation-delay: 0.15s; }
+.explorer-block-row:nth-child(6)  { animation-delay: 0.18s; }
+.explorer-block-row:nth-child(7)  { animation-delay: 0.21s; }
+.explorer-block-row:nth-child(8)  { animation-delay: 0.24s; }
+.explorer-block-row:nth-child(9)  { animation-delay: 0.27s; }
+.explorer-block-row:nth-child(10) { animation-delay: 0.30s; }
+.explorer-block-row:nth-child(n+11) { animation-delay: 0.33s; }
+
+@keyframes row-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explorer-block-row { animation: none; }
+}
+
+.explorer-block-row td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--hairline);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.explorer-block-row:hover td {
+  background: var(--color-panel-2);
+}
+
+.explorer-block-row .hash-link {
+  color: var(--color-info);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.explorer-block-row .hash-link:hover {
+  color: var(--color-info-soft, var(--color-info));
+  text-decoration: underline;
+}
+
+.explorer-block-row .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.explorer-block-row .mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.explorer-block-row .muted {
+  color: var(--color-muted);
+}
