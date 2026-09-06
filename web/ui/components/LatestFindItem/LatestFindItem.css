@@ -13,7 +13,6 @@
   padding: 10px 8px;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: var(--transition);
 }
 
 .latest-find-item:last-child {
@@ -21,7 +20,19 @@
 }
 
 body:not(.keyboard-nav) .latest-find-item:hover {
-  background: var(--color-accent-soft);
+  background: var(--color-accent);
+}
+
+body:not(.keyboard-nav) .latest-find-item:hover .url,
+body:not(.keyboard-nav) .latest-find-item:hover .nameHdr,
+body:not(.keyboard-nav) .latest-find-item:hover .scid,
+body:not(.keyboard-nav) .latest-find-item:hover .latest-find-meta {
+  color: var(--hw-ink);
+}
+
+body:not(.keyboard-nav) .latest-find-item:hover .latest-find-tag {
+  background: var(--hw-ink);
+  color: var(--color-accent);
 }
 
 .latest-find-item .icon-slot {
@@ -102,5 +113,4 @@ body:not(.keyboard-nav) .latest-find-item:hover {
   padding: 2px 8px;
   border-radius: var(--radius-lg);
   letter-spacing: 0.5px;
-  box-shadow: 0 0 8px rgba(167, 139, 250, 0.4);
 }

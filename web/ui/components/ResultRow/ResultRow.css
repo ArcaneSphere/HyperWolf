@@ -11,11 +11,9 @@
 
 .result {
   position: relative;
-  border: 1px solid var(--hairline);
   padding: 22px 18px;
   display: flex;
   gap: 18px;
-  transition: var(--transition);
   cursor: pointer;
   border-radius: var(--radius-lg);
   background: var(--surface-result);
@@ -26,26 +24,7 @@
   animation: result-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.result::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--gradient-accent);
-  opacity: 0.55;
-  transition: opacity 0.25s ease, height 0.25s ease;
-}
-
-.result:hover::before,
-.result.keyboard-selected::before {
-  opacity: 1;
-  height: 3px;
-}
-
 [data-theme="light"] .result {
-  border-color: var(--hairline);
   background: var(--surface-result);
 }
 
@@ -70,25 +49,32 @@
   .result { animation: none; }
 }
 
-/* Mouse hover only when NOT keyboard navigating */
+/* Mouse hover only when NOT keyboard navigating — mfp invert:
+   the whole row floods with its own accent hue (--self) */
 body:not(.keyboard-nav) .result:hover,
 .result.keyboard-selected {
-  background: linear-gradient(90deg, var(--color-accent-soft), transparent 18%), var(--color-panel);
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-md), 0 0 0 1px var(--border-search-box), var(--glow-base);
-  transform: translateY(-2px);
+  background: transparent;
 }
 
-/* Dark mode glow */
-body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
-[data-theme="dark"] .result.keyboard-selected {
-  box-shadow: var(--color-glow);
-}
-
-/* Active keyboard-selected text colors */
+body:not(.keyboard-nav) .result:hover .url,
+body:not(.keyboard-nav) .result:hover .nameHdr,
+body:not(.keyboard-nav) .result:hover .scid,
+body:not(.keyboard-nav) .result:hover .descr,
+body:not(.keyboard-nav) .result:hover .rating,
+.result.keyboard-selected .url,
 .result.keyboard-selected .nameHdr,
-.result.keyboard-selected .scid {
-  color: var(--color-accent);
+.result.keyboard-selected .scid,
+.result.keyboard-selected .descr,
+.result.keyboard-selected .rating {
+  opacity: 0.9;
+}
+
+body:not(.keyboard-nav) .result:hover .scid,
+body:not(.keyboard-nav) .result:hover .rating,
+.result.keyboard-selected .scid,
+.result.keyboard-selected .rating {
+  background: transparent;
+  border-color: transparent;
 }
 
 /* Prevent hover flicker conflicts */
@@ -110,16 +96,13 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
   border-radius: var(--radius-lg);
   display: block;
   object-fit: cover;
-  border: 1px solid var(--syn-constant-soft);
-  box-shadow: 0 0 0 1px var(--border-search-box), var(--shadow-sm);
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .result:hover .icon-slot .icon,
 .result.keyboard-selected .icon-slot .icon {
   transform: scale(1.06);
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 1px var(--border-search-box), 0 0 12px var(--color-glow);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 /* Container holding the icon */
@@ -156,17 +139,9 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
   margin-bottom: 6px;
   color: var(--color-text);
   cursor: pointer;
-  transition: var(--transition);
 }
 
-.nameHdr:hover {
-  background: var(--gradient-accent);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* SCID as a mono code-chip */
+/* SCID as plain mono text — no border, no fill */
 .scid {
   display: inline-block;
   max-width: 100%;
@@ -175,26 +150,15 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
   white-space: nowrap;
   font-size: 12px;
   color: var(--syn-string);
-  background: var(--syn-string-soft);
-  border: 1px solid var(--syn-string);
-  padding: 3px 10px;
-  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   cursor: pointer;
   margin: 0 0 10px;
-  transition: var(--transition);
-}
-
-.scid:hover {
-  color: var(--syn-class);
-  border-color: var(--syn-class);
-  box-shadow: 0 0 10px var(--syn-string-soft);
 }
 
 .descr {
   font-size: 14px;
   line-height: 1.6;
-  color: var(--color-text-secondary);
+  color: var(--descr-hue, var(--c-purple));
   margin-bottom: 8px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -202,19 +166,15 @@ body:not(.keyboard-nav) [data-theme="dark"] .result:hover,
   overflow: hidden;
 }
 
-/* Rating as a colored pill */
+/* Rating as plain mono text — no border, no fill; hue per rij via --self */
 .rating {
   display: inline-block;
   margin-top: 8px;
-  font-size: 11px;
+  font-size: 13px;
   font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: 0.3px;
-  color: var(--syn-number);
-  background: var(--syn-number-soft);
-  border: 1px solid var(--syn-number);
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
+  color: var(--self, var(--syn-number));
 }
 
 /* =================== Bookmark =================== */

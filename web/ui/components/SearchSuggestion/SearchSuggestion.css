@@ -9,17 +9,24 @@
   padding: 12px 14px;
   margin: 2px 0;
   cursor: pointer;
-  border-radius: 9px;
-  transition: var(--transition);
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+/* mfp invert-hover: suggestion floods with its selector (purple) hue */
 .search-suggestion:hover,
 .search-suggestion.selected {
-  background: var(--syn-function-soft);
-  color: var(--color-text);
+  background: var(--syn-selector);
+  color: var(--hw-ink);
+}
+
+.search-suggestion:hover .durl,
+.search-suggestion:hover .meta,
+.search-suggestion.selected .durl,
+.search-suggestion.selected .meta {
+  color: var(--hw-ink);
 }
 
 .search-suggestion .durl {
@@ -37,15 +44,4 @@
   color: var(--syn-comment);
   font-family: var(--font-mono);
   opacity: 0.8;
-}
-
-[data-theme="dark"] .search-suggestion:hover,
-[data-theme="dark"] .search-suggestion.selected {
-  box-shadow: var(--ring-accent);
-}
-
-.search-suggestion.selected {
-  background: var(--syn-selector-soft);
-  color: var(--color-text);
-  border-left: 2px solid var(--syn-selector);
 }

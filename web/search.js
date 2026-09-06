@@ -37,6 +37,8 @@
   }
 
   let apiBase = "http://127.0.0.1:18082/api";
+  window.UI = window.UI || {};
+  window.UI.apiBase = apiBase;
 
   (async function initApiBase() {
     try {
@@ -44,6 +46,7 @@
       const data = await resp.json();
       if (data?.ok && data?.result?.gnomon_api_port) {
         apiBase = "http://127.0.0.1:" + data.result.gnomon_api_port + "/api";
+        window.UI.apiBase = apiBase;
       }
     } catch (e) {}
   })();
@@ -577,6 +580,13 @@
         bookmarked: typeof window.isBookmarked === "function" && window.isBookmarked(r.scid)
       });
       resultsEl.appendChild(row);
+      const descrEl = row.querySelector(".descr");
+      if (descrEl) {
+        const lh = parseFloat(getComputedStyle(descrEl).lineHeight) || 0;
+        if (lh && Math.round(descrEl.scrollHeight / lh) > 1) {
+          row.style.setProperty("--descr-hue", "var(--c-fuschia)");
+        }
+      }
     });
   }
 

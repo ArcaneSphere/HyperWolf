@@ -32,25 +32,12 @@
   background: var(--surface-search-card);
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border: 1px solid var(--hairline);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   transition: var(--transition);
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-search-card), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-.search-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--gradient-accent);
-  opacity: 0.9;
-  z-index: 1;
+  box-shadow: var(--shadow-search-card);
 }
 
 [data-theme="dark"] .search-card,
@@ -61,9 +48,7 @@
 
 .search-card:hover,
 [data-theme="light"] .search-card:hover {
-  border-color: var(--color-border-2);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-search-box), var(--glow-base);
+  box-shadow: var(--shadow-lg);
 }
 
 .search-card-header {

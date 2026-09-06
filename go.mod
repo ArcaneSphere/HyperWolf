@@ -56,4 +56,6 @@ replace github.com/deroproject/derohe => github.com/civilware/derohe v0.0.0-2024
 
 replace github.com/civilware/tela => github.com/Azylem/tela v0.0.0-20260321215354-202c8ca5ce79
 
-replace github.com/hypergnomon/hypergnomon => github.com/ArcaneSphere/HyperGnomon v0.0.0-20260804120232-2103b63e452d
+// ArcaneSphere/HyperGnomon fork, vendored in-repo (internal/fork/hypergnomon)
+// so the CORS middleware patch (api/http.go) survives go clean -modcache.
+replace github.com/hypergnomon/hypergnomon => ./internal/fork/hypergnomon
