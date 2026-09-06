@@ -51,7 +51,8 @@ let settings = {
   showTopBar: false, 
   searchGradient: "default",
   checkUpdates: true,
-  rssFeedUrl: "https://dero.world/anotherworld/feed/"
+  rssFeedUrl: "https://dero.world/anotherworld/feed/",
+  fontScale: 1
 };
 let appConfig = { gnomon_api_port: 18082, tela_port: 18081 };
 let wasConnected = false;
@@ -804,7 +805,8 @@ function saveSettings() {
         showTopBar: settings.showTopBar,
         searchGradient: settings.searchGradient,
         checkUpdates: settings.checkUpdates,
-        rssFeedUrl: settings.rssFeedUrl
+        rssFeedUrl: settings.rssFeedUrl,
+        fontScale: settings.fontScale
       }
     })
   }).catch(e => console.warn("Failed to save settings to server:", e));
@@ -847,6 +849,7 @@ async function loadSettings() {
   updateSettingNodeBookmark();
   applyTopBar();
   applySearchGradient();
+  applyFontScale();
 }
 
 function initToggleSwitch(id, settingKey) {
@@ -914,6 +917,15 @@ function applySearchGradient() {
   document.body.classList.add("g-" + gradient);
 }
 
+function applyFontScale() {
+  const scale = Number(settings.fontScale) || 1;
+  document.body.style.zoom = String(scale);
+  // Compensate the fixed 100vh body height for the zoom factor so the scaled
+  // content still fills the viewport — otherwise Small leaves an empty band at
+  // the bottom and Large pushes content past the visible area.
+  document.body.style.height = (100 / scale) + "vh";
+}
+
 function initSettingsUI() {
   initToggleSwitch("setting-direct-load", "directLoad");
   initToggleSwitch("setting-auto-connect", "autoConnect");
@@ -932,6 +944,21 @@ function initSettingsUI() {
       saveSettings();
       applySearchGradient();
       pushToast("connected", "Search background updated");
+    });
+  }
+  const fontScaleOptions = document.getElementById("setting-font-size-options");
+  if (fontScaleOptions) {
+    const currentScale = String(Number(settings.fontScale) || 1);
+    fontScaleOptions.querySelectorAll("[data-font-scale]").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.fontScale === currentScale);
+      btn.addEventListener("click", () => {
+        const scale = Number(btn.dataset.fontScale);
+        settings.fontScale = scale;
+        saveSettings();
+        applyFontScale();
+        fontScaleOptions.querySelectorAll("[data-font-scale]").forEach(b => b.classList.toggle("active", b === btn));
+        pushToast("connected", "Font size updated");
+      });
     });
   }
   const nodeInput = document.getElementById("setting-default-node");
@@ -963,7 +990,7 @@ function initSettingsUI() {
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
       showConfirmPopover("Reset all settings?", "This will reset every setting to its original value.", () => {
-        settings = { defaultNode: "", autoConnect: true, directLoad: true, openDashboardOnStart: true, hiddenExtensions: "", showSearchCards: true, showTopBar: false, searchGradient: "default", checkUpdates: true, rssFeedUrl: "https://dero.world/anotherworld/feed/" };
+        settings = { defaultNode: "", autoConnect: true, directLoad: true, openDashboardOnStart: true, hiddenExtensions: "", showSearchCards: true, showTopBar: false, searchGradient: "default", checkUpdates: true, rssFeedUrl: "https://dero.world/anotherworld/feed/", fontScale: 1 };
         localStorage.removeItem("hyperwolf_settings");
         loadSettings();
         pushToast("connected", "Settings reset to defaults");

@@ -28,12 +28,21 @@
     document.body.appendChild(searchSuggestions);
   }
 
+  // Read the user font/zoom scale applied to <body> (1 = normal). The dropdown
+  // is position:fixed inside the zoomed body, so Chromium scales its pixel
+  // offsets by this factor — we divide by it so it stays aligned under the bar.
+  function currentFontScale() {
+    const zoom = parseFloat(document.body.style.zoom);
+    return Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+  }
+
   function positionDropdown() {
     if (!searchSuggestions || searchSuggestions.classList.contains("hidden")) return;
+    const scale = currentFontScale();
     const rect = searchBox.getBoundingClientRect();
-    searchSuggestions.style.top = (rect.bottom + 4) + "px";
-    searchSuggestions.style.left = rect.left + "px";
-    searchSuggestions.style.width = rect.width + "px";
+    searchSuggestions.style.top = ((rect.bottom + 4) / scale) + "px";
+    searchSuggestions.style.left = (rect.left / scale) + "px";
+    searchSuggestions.style.width = (rect.width / scale) + "px";
   }
 
   let apiBase = "http://127.0.0.1:18082/api";
@@ -310,6 +319,7 @@
               if (idx >= 0) {
                 Object.assign(allResults[idx], res);
                 allResults[idx].ratingsLoaded = true;
+                updateRatingInPlace(allResults[idx].scid);
               }
             }
             if (token === loadToken) {
@@ -346,6 +356,7 @@
                   });
                 }
                 allResults[idx].ratingsLoaded = true;
+                updateRatingInPlace(allResults[idx].scid);
               }
             }
             fuse.setCollection(allResults);
@@ -587,6 +598,18 @@
           row.style.setProperty("--descr-hue", "var(--c-fuschia)");
         }
       }
+    });
+  }
+
+  // Update just the visible rating node for a SCID in place, so a ratings
+  // result that lands while results are already painted re-renders immediately
+  // instead of leaving a stale "—" placeholder until a full refresh.
+  function updateRatingInPlace(scid) {
+    const r = allResults.find(x => x.scid === scid);
+    if (!r || !r.ratingsLoaded) return;
+    resultsEl.querySelectorAll(`.result[data-scid="${scid}"]`).forEach(row => {
+      const ratingEl = row.querySelector(".rating");
+      if (ratingEl) ratingEl.textContent = `👍 ${r.likes} 👎 ${r.dislikes} ⭐ ${r.average}`;
     });
   }
 
@@ -832,7 +855,7 @@
   const rssFeedUpdated = document.getElementById("rss-feed-updated");
   
   // State
-  let currentAppVersion = "0.13.1";
+  let currentAppVersion = "0.14.0";
   let rssFeedUrl = "https://dero.world/anotherworld/feed/";
   let updateCheckEnabled = true;
   let rssRefreshInterval = null;

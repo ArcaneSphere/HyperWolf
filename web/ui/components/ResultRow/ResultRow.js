@@ -33,6 +33,7 @@
 
     const div = document.createElement("div");
     div.className = "result";
+    if (r.scid) div.dataset.scid = r.scid;
     const mfpHues = [
       "var(--c-green)", "var(--c-blue)", "var(--c-purple)",
       "var(--c-fuschia)", "var(--c-orange)", "var(--c-yellow)",
