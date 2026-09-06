@@ -66,6 +66,15 @@ func TestPathWithinRejectsExistingSymlink(t *testing.T) {
 	}
 }
 
+func TestNormalizeTELAPathKeepsVirtualRootRelative(t *testing.T) {
+	if got := normalizeTELAPath("/index.html"); got != "index.html" {
+		t.Fatalf("normalizeTELAPath = %q, want index.html", got)
+	}
+	if got := normalizeTELAPath("\\assets\\app.js"); got != "assets\\app.js" {
+		t.Fatalf("normalizeTELAPath = %q, want assets path", got)
+	}
+}
+
 func TestProxyManagerShutdownBeforeStart(t *testing.T) {
 	pm := NewProxyManager(0, func() string { return "" })
 	pm.Shutdown()

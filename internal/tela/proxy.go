@@ -386,10 +386,17 @@ func pathWithin(root string, parts ...string) (string, error) {
 	return candidate, nil
 }
 
+// normalizeTELAPath converts a TELA virtual-root path such as "/index.html"
+// into a path relative to the reconstructed app directory. The leading slash
+// is not a host filesystem root; it is part of TELA's virtual path format.
+func normalizeTELAPath(path string) string {
+	return strings.TrimLeft(path, "/\\")
+}
+
 func downloadAndReconstructShards(scid string, index tela.INDEX, telaNode string) (string, error) {
 	log.Printf("[SHARDS] Reconstructing SCID: %s", scid)
 
-	baseName := strings.TrimSuffix(index.DURL, tela.TAG_DOC_SHARDS)
+	baseName := normalizeTELAPath(strings.TrimSuffix(index.DURL, tela.TAG_DOC_SHARDS))
 	appDir, err := pathWithin(tela.GetClonePath(), baseName)
 	if err != nil {
 		return "", fmt.Errorf("unsafe TELA app path: %w", err)
@@ -439,7 +446,7 @@ func downloadAndReconstructShards(scid string, index tela.INDEX, telaNode string
 	}
 
 	for key, g := range groups {
-		dst, err := pathWithin(appDir, key)
+		dst, err := pathWithin(appDir, normalizeTELAPath(key))
 		if err != nil {
 			return "", fmt.Errorf("unsafe TELA shard path: %w", err)
 		}
